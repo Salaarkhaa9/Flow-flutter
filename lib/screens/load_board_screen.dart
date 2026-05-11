@@ -414,15 +414,15 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
                 child: const Center(child: Text('CH', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
               ),
               const SizedBox(width: 10),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Cargohub Brokers', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text('Cargohub Brokers', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                     Row(
                       children: [
-                        const Icon(Icons.star, color: Colors.orange, size: 12),
-                        const Text(' 4.9 • 312 loads', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                         Icon(Icons.star, color: Colors.orange, size: 12),
+                         Text(' 4.9 • 312 loads', style: TextStyle(color: Colors.grey, fontSize: 10)),
                       ],
                     ),
                   ],

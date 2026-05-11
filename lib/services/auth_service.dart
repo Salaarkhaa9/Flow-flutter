@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart';
 import '../models/user.dart';
+import '../models/vehicle_profile.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
 
   User? _currentUser;
   final List<User> _registeredUsers = [];
+  final Map<String, VehicleProfile> _vehicleProfiles = {};
 
   factory AuthService() {
     return _instance;
@@ -51,7 +54,7 @@ class AuthService {
       _registeredUsers.add(newUser);
       return true;
     } catch (e) {
-      print('Registration error: $e');
+      debugPrint('Registration error: $e');
       return false;
     }
   }
@@ -64,7 +67,6 @@ class AuthService {
     try {
       // Simulate API delay
       await Future.delayed(const Duration(seconds: 1));
-
       // Find user by MC number
       final user = _registeredUsers.firstWhere(
         (user) => user.mcNumber == mcNumber && user.password == password,
@@ -99,7 +101,7 @@ class AuthService {
       _currentUser = user;
       return true;
     } catch (e) {
-      print('Login error: $e');
+      debugPrint('Login error: $e');
       return false;
     }
   }
@@ -107,6 +109,28 @@ class AuthService {
   // Logout
   void logout() {
     _currentUser = null;
+  }
+
+  VehicleProfile? getVehicleProfile(String userId) {
+    return _vehicleProfiles[userId];
+  }
+
+  bool hasVehicleProfile(String userId) {
+    return _vehicleProfiles.containsKey(userId);
+  }
+
+  Future<bool> saveVehicleProfile({
+    required String userId,
+    required VehicleProfile profile,
+  }) async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 400));
+      _vehicleProfiles[userId] = profile;
+      return true;
+    } catch (e) {
+      debugPrint('Vehicle profile save error: $e');
+      return false;
+    }
   }
 
   // Get all registered users (for debugging)

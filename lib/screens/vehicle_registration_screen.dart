@@ -1,0 +1,762 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import '../services/auth_service.dart';
+import '../models/vehicle_profile.dart';
+
+class VehicleRegistrationScreen extends StatefulWidget {
+  final bool isEditing;
+
+  const VehicleRegistrationScreen({super.key, this.isEditing = false});
+
+  @override
+  State<VehicleRegistrationScreen> createState() =>
+      _VehicleRegistrationScreenState();
+}
+
+class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
+  final AuthService _auth = AuthService();
+  final GlobalKey<FormState> _vehicleFormKey = GlobalKey<FormState>();
+  final TextEditingController _licensePlateController = TextEditingController();
+  final TextEditingController _stateController = TextEditingController();
+  final TextEditingController _vinController = TextEditingController();
+  final TextEditingController _yearController = TextEditingController();
+  final TextEditingController _makeController = TextEditingController();
+  final TextEditingController _modelController = TextEditingController();
+  final TextEditingController _trailerLengthController =
+      TextEditingController();
+  final TextEditingController _trailerWidthController = TextEditingController();
+  final TextEditingController _maxWeightController = TextEditingController();
+  final TextEditingController _internalFleetIdController =
+      TextEditingController();
+  final TextEditingController _registrationDocumentController =
+      TextEditingController();
+  final TextEditingController _insuranceDocumentController =
+      TextEditingController();
+
+  String? _equipmentType;
+  String _registrationDocumentType = 'Image';
+  String _insuranceDocumentType = 'PDF';
+  XFile? _registrationImage;
+  XFile? _insuranceImage;
+  String? _registrationPdfPath;
+  String? _insurancePdfPath;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isEditing) {
+      _loadExistingProfile();
+    }
+  }
+
+  void _loadExistingProfile() {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final profile = _auth.getVehicleProfile(user.mcNumber);
+    if (profile == null) return;
+
+    _licensePlateController.text = profile.licensePlate;
+    _stateController.text = profile.state;
+    _vinController.text = profile.vinNumber;
+    _yearController.text = profile.year;
+    _makeController.text = profile.make;
+    _modelController.text = profile.model;
+    _trailerLengthController.text = profile.trailerLength;
+    _trailerWidthController.text = profile.trailerWidth;
+    _maxWeightController.text = profile.maxWeight;
+    _internalFleetIdController.text = profile.internalFleetId;
+    _registrationDocumentController.text = profile.registrationDocumentLabel;
+    _insuranceDocumentController.text = profile.insuranceDocumentLabel;
+    _equipmentType = profile.equipmentType;
+    _registrationDocumentType = profile.registrationDocumentType;
+    _insuranceDocumentType = profile.insuranceDocumentType;
+  }
+
+  Future<void> _saveVehicleRegistration() async {
+    if (!(_vehicleFormKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    setState(() => _isLoading = true);
+
+    final registrationPath = _registrationDocumentType == 'Image'
+        ? _registrationImage?.path
+        : _registrationPdfPath;
+    final insurancePath = _insuranceDocumentType == 'Image'
+        ? _insuranceImage?.path
+        : _insurancePdfPath;
+
+    final profile = VehicleProfile(
+      equipmentType: _equipmentType ?? '',
+      licensePlate: _licensePlateController.text.trim(),
+      state: _stateController.text.trim(),
+      vinNumber: _vinController.text.trim(),
+      year: _yearController.text.trim(),
+      make: _makeController.text.trim(),
+      model: _modelController.text.trim(),
+      trailerLength: _trailerLengthController.text.trim(),
+      trailerWidth: _trailerWidthController.text.trim(),
+      maxWeight: _maxWeightController.text.trim(),
+      internalFleetId: _internalFleetIdController.text.trim(),
+      registrationDocumentLabel: _registrationDocumentController.text.trim(),
+      registrationDocumentType: _registrationDocumentType,
+      insuranceDocumentLabel: _insuranceDocumentController.text.trim(),
+      insuranceDocumentType: _insuranceDocumentType,
+      registrationDocumentPath: registrationPath,
+      insuranceDocumentPath: insurancePath,
+    );
+
+    final saved =
+        await _auth.saveVehicleProfile(userId: user.mcNumber, profile: profile);
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (saved) {
+      Navigator.pop(context, true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vehicle registration saved successfully!'),
+          backgroundColor: Colors.teal,
+        ),
+      );
+    }
+  }
+
+  void _resetForm() {
+    _licensePlateController.clear();
+    _stateController.clear();
+    _vinController.clear();
+    _yearController.clear();
+    _makeController.clear();
+    _modelController.clear();
+    _trailerLengthController.clear();
+    _trailerWidthController.clear();
+    _maxWeightController.clear();
+    _internalFleetIdController.clear();
+    _registrationDocumentController.clear();
+    _insuranceDocumentController.clear();
+    setState(() {
+      _equipmentType = null;
+      _registrationDocumentType = 'Image';
+      _insuranceDocumentType = 'PDF';
+      _registrationImage = null;
+      _insuranceImage = null;
+      _registrationPdfPath = null;
+      _insurancePdfPath = null;
+    });
+  }
+
+  void _toggleVehicleDocumentType({
+    required bool isRegistration,
+    required String documentType,
+  }) {
+    setState(() {
+      if (isRegistration) {
+        _registrationDocumentType = documentType;
+      } else {
+        _insuranceDocumentType = documentType;
+      }
+    });
+  }
+
+  Future<void> _pickImageForDocument({required bool isRegistration}) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    if (image != null && mounted) {
+      setState(() {
+        if (isRegistration) {
+          _registrationImage = image;
+          _registrationDocumentController.text =
+              image.name.isNotEmpty ? image.name : 'registration_image.jpg';
+        } else {
+          _insuranceImage = image;
+          _insuranceDocumentController.text =
+              image.name.isNotEmpty ? image.name : 'insurance_image.jpg';
+        }
+      });
+    }
+  }
+
+  Future<void> _pickPdfForDocument({required bool isRegistration}) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+      if (result != null && result.files.isNotEmpty && mounted) {
+        final file = result.files.first;
+        setState(() {
+          if (isRegistration) {
+            _registrationPdfPath = file.path;
+            _registrationDocumentController.text =
+                file.name.isNotEmpty ? file.name : 'registration_document.pdf';
+          } else {
+            _insurancePdfPath = file.path;
+            _insuranceDocumentController.text =
+                file.name.isNotEmpty ? file.name : 'insurance_document.pdf';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick PDF: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickDocument({
+    required bool isRegistration,
+    required String documentType,
+  }) async {
+    if (documentType == 'Image') {
+      await _pickImageForDocument(isRegistration: isRegistration);
+    } else {
+      await _pickPdfForDocument(isRegistration: isRegistration);
+    }
+  }
+
+  Widget _buildDocumentTypeButton({
+    required bool selected,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Expanded(
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: selected
+              ? const Color(0xFF8E5AF7).withOpacity(0.12)
+              : Colors.white,
+          foregroundColor: const Color(0xFF1E1128),
+          side: BorderSide(
+              color: selected ? const Color(0xFF8E5AF7) : Colors.grey.shade300),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? const Color(0xFF7A3FF2) : Colors.black87,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVehicleField(
+    String label,
+    TextEditingController controller, {
+    String? hint,
+    String? Function(String?)? validator,
+    double width = 145,
+  }) {
+    return SizedBox(
+      width: width,
+      child: TextFormField(
+        controller: controller,
+        validator: validator,
+        style: const TextStyle(color: Colors.black87),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+          ),
+          hintText: hint,
+          filled: true,
+          fillColor: const Color(0xFFF7F6FB),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF8E5AF7), width: 1.5),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocumentSection({
+    required String title,
+    required TextEditingController controller,
+    required String documentType,
+    required bool isRegistration,
+  }) {
+    final hasFile = isRegistration
+        ? (_registrationDocumentType == 'Image'
+            ? _registrationImage != null
+            : _registrationPdfPath != null)
+        : (_insuranceDocumentType == 'Image'
+            ? _insuranceImage != null
+            : _insurancePdfPath != null);
+
+    final fileName = isRegistration
+        ? (_registrationDocumentType == 'Image'
+            ? (_registrationImage?.name ?? '')
+            : (_registrationPdfPath != null
+                ? _registrationPdfPath!.split(Platform.pathSeparator).last
+                : ''))
+        : (_insuranceDocumentType == 'Image'
+            ? (_insuranceImage?.name ?? '')
+            : (_insurancePdfPath != null
+                ? _insurancePdfPath!.split(Platform.pathSeparator).last
+                : ''));
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F6FB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _buildDocumentTypeButton(
+                selected: documentType == 'Image',
+                label: 'Image',
+                onPressed: () => _toggleVehicleDocumentType(
+                    isRegistration: isRegistration, documentType: 'Image'),
+              ),
+              const SizedBox(width: 10),
+              _buildDocumentTypeButton(
+                selected: documentType == 'PDF',
+                label: 'PDF',
+                onPressed: () => _toggleVehicleDocumentType(
+                    isRegistration: isRegistration, documentType: 'PDF'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () =>
+                _pickDocument(isRegistration: isRegistration, documentType: documentType),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: hasFile
+                      ? const Color(0xFF8E5AF7)
+                      : Colors.grey.shade300,
+                  width: hasFile ? 1.5 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    hasFile
+                        ? Icons.check_circle
+                        : (documentType == 'Image'
+                            ? Icons.image_outlined
+                            : Icons.picture_as_pdf_outlined),
+                    color: hasFile
+                        ? const Color(0xFF8E5AF7)
+                        : Colors.grey.shade600,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      hasFile
+                          ? fileName
+                          : 'Upload ${documentType.toLowerCase()} from device',
+                      style: TextStyle(
+                        color: hasFile
+                            ? const Color(0xFF1E1128)
+                            : Colors.grey.shade600,
+                        fontWeight:
+                            hasFile ? FontWeight.w600 : FontWeight.w400,
+                        fontSize: 13,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.upload_file,
+                    color: Color(0xFF8E5AF7),
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (hasFile) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    if (isRegistration) {
+                      if (_registrationDocumentType == 'Image') {
+                        _registrationImage = null;
+                      } else {
+                        _registrationPdfPath = null;
+                      }
+                      _registrationDocumentController.clear();
+                    } else {
+                      if (_insuranceDocumentType == 'Image') {
+                        _insuranceImage = null;
+                      } else {
+                        _insurancePdfPath = null;
+                      }
+                      _insuranceDocumentController.clear();
+                    }
+                  });
+                },
+                child: const Text(
+                  'Remove',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: Stack(
+        children: [
+          Container(
+            height: 200,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFFCE9FFC),
+                  Color(0xFFF8F9FA),
+                ],
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1128),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const Icon(Icons.arrow_back,
+                              color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: 15),
+                        const Expanded(
+                          child: Text(
+                            'Vehicle Management',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Form(
+                      key: _vehicleFormKey,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 18,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                          border: Border.all(color: const Color(0xFFE8E1FF)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF8E5AF7).withOpacity(0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.local_shipping_outlined,
+                                      color: Color(0xFF7A3FF2)),
+                                ),
+                                const SizedBox(width: 12),
+                                const Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Vehicle Registration',
+                                        style: TextStyle(
+                                            fontSize: 18, fontWeight: FontWeight.w800),
+                                      ),
+                                      SizedBox(height: 3),
+                                      Text(
+                                        'Complete this first, then you can book a load.',
+                                        style: TextStyle(color: Colors.black54, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: [
+                                SizedBox(
+                                  width: 145,
+                                  child: DropdownButtonFormField<String>(
+                                    isExpanded: true,
+                                    value: _equipmentType,
+                                    hint: const Text(
+                                      'Not Selected',
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                    dropdownColor: Colors.white,
+                                    style: const TextStyle(color: Colors.black),
+                                    decoration: InputDecoration(
+                                      labelText: 'Equipment Type',
+                                      labelStyle: const TextStyle(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      filled: true,
+                                      fillColor: const Color(0xFFF7F6FB),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(color: Colors.grey.shade200),
+                                      ),
+                                    ),
+                                    items: const [
+                                      DropdownMenuItem(
+                                          value: 'Flatbed', child: Text('Flatbed', style: TextStyle(color: Colors.black))),
+                                      DropdownMenuItem(
+                                          value: 'Dry Van', child: Text('Dry Van', style: TextStyle(color: Colors.black))),
+                                      DropdownMenuItem(value: 'Reefer', child: Text('Reefer', style: TextStyle(color: Colors.black))),
+                                      DropdownMenuItem(
+                                          value: 'Step Deck', child: Text('Step Deck', style: TextStyle(color: Colors.black))),
+                                      DropdownMenuItem(value: 'Other', child: Text('Other', style: TextStyle(color: Colors.black))),
+                                    ],
+                                    onChanged: (value) {
+                                      setState(() => _equipmentType = value);
+                                    },
+                                  ),
+                                ),
+                                _buildVehicleField(
+                                  'License Plate',
+                                  _licensePlateController,
+                                  validator: (value) =>
+                                      value == null || value.trim().isEmpty ? 'Required' : null,
+                                ),
+                                _buildVehicleField(
+                                  'State',
+                                  _stateController,
+                                  validator: (value) =>
+                                      value == null || value.trim().isEmpty ? 'Required' : null,
+                                ),
+                                _buildVehicleField(
+                                  'VIN Number',
+                                  _vinController,
+                                  validator: (value) =>
+                                      value == null || value.trim().isEmpty ? 'Required' : null,
+                                ),
+                                _buildVehicleField(
+                                  'Year',
+                                  _yearController,
+                                  validator: (value) =>
+                                      value == null || value.trim().isEmpty ? 'Required' : null,
+                                ),
+                                _buildVehicleField(
+                                  'Make',
+                                  _makeController,
+                                  validator: (value) =>
+                                      value == null || value.trim().isEmpty ? 'Required' : null,
+                                ),
+                                _buildVehicleField(
+                                  'Model',
+                                  _modelController,
+                                  validator: (value) =>
+                                      value == null || value.trim().isEmpty ? 'Required' : null,
+                                ),
+                                _buildVehicleField(
+                                  'Trailer Length (ft)',
+                                  _trailerLengthController,
+                                  validator: (value) =>
+                                      value == null || value.trim().isEmpty ? 'Required' : null,
+                                ),
+                                _buildVehicleField(
+                                  'Trailer Width (ft)',
+                                  _trailerWidthController,
+                                  validator: (value) =>
+                                      value == null || value.trim().isEmpty ? 'Required' : null,
+                                ),
+                                _buildVehicleField(
+                                  'Max Weight (lbs)',
+                                  _maxWeightController,
+                                  validator: (value) =>
+                                      value == null || value.trim().isEmpty ? 'Required' : null,
+                                ),
+                                _buildVehicleField(
+                                  'Internal Fleet ID',
+                                  _internalFleetIdController,
+                                  hint: 'Optional',
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+                            const Text(
+                              'Documents',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Vehicle registration and insurance can be added as either an image or a PDF.',
+                              style: TextStyle(color: Colors.black54, fontSize: 12),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildDocumentSection(
+                              title: 'Vehicle Registration',
+                              controller: _registrationDocumentController,
+                              documentType: _registrationDocumentType,
+                              isRegistration: true,
+                            ),
+                            const SizedBox(height: 14),
+                            _buildDocumentSection(
+                              title: 'Insurance Certificate',
+                              controller: _insuranceDocumentController,
+                              documentType: _insuranceDocumentType,
+                              isRegistration: false,
+                            ),
+                            const SizedBox(height: 18),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _resetForm,
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: const Color(0xFF1E1128),
+                                      side: BorderSide(color: Colors.grey.shade300),
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                    child: const Text('Reset'),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: _isLoading ? null : _saveVehicleRegistration,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF8E5AF7),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Text('Save Vehicle'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _licensePlateController.dispose();
+    _stateController.dispose();
+    _vinController.dispose();
+    _yearController.dispose();
+    _makeController.dispose();
+    _modelController.dispose();
+    _trailerLengthController.dispose();
+    _trailerWidthController.dispose();
+    _maxWeightController.dispose();
+    _internalFleetIdController.dispose();
+    _registrationDocumentController.dispose();
+    _insuranceDocumentController.dispose();
+    super.dispose();
+  }
+}

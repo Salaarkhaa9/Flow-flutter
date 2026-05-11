@@ -8,6 +8,8 @@ import 'screens/load_board_screen.dart';
 import 'screens/load_details_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/navigation_screen.dart';
+import 'screens/vehicle_registration_screen.dart';
+import 'screens/fuel_log_screen.dart';
 import 'models/load.dart';
 import 'models/shipment.dart';
 import 'theme/app_theme.dart';
@@ -55,6 +57,11 @@ class FlowApp extends StatelessWidget {
             destination: destination,
           );
         },
+        '/vehicle_registration': (context) {
+          final isEditing = ModalRoute.of(context)?.settings.arguments as bool? ?? false;
+          return VehicleRegistrationScreen(isEditing: isEditing);
+        },
+        '/fuel_log': (context) => const FuelLogScreen(),
       },
     );
   }

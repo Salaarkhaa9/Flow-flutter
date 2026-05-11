@@ -119,8 +119,8 @@ class _ShipmentDetailScreenState extends State<ShipmentDetailScreen> {
           // Full-screen OSM map
           FlutterMap(
             mapController: _mapController,
-            options: MapOptions(
-              initialCenter: const LatLng(33.0, -89.0),
+            options: const MapOptions(
+              initialCenter: LatLng(33.0, -89.0),
               initialZoom: 5.5,
             ),
             children: [

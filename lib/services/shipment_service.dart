@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../models/shipment.dart';
 import 'auth_service.dart';
 
@@ -22,7 +23,7 @@ class ShipmentService {
 
       return _userShipments[currentUser.mcNumber] ?? [];
     } catch (e) {
-      print('Error fetching shipments: $e');
+      debugPrint('Error fetching shipments: $e');
       return [];
     }
   }
@@ -66,7 +67,7 @@ class ShipmentService {
       _userShipments[userId]!.add(shipment);
       return true;
     } catch (e) {
-      print('Error adding shipment: $e');
+      debugPrint('Error adding shipment: $e');
       return false;
     }
   }
@@ -97,7 +98,7 @@ class ShipmentService {
         ),
       );
     } catch (e) {
-      print('Error fetching shipment: $e');
+      debugPrint('Error fetching shipment: $e');
       return null;
     }
   }
@@ -134,7 +135,7 @@ class ShipmentService {
 
       return false;
     } catch (e) {
-      print('Error updating shipment status: $e');
+      debugPrint('Error updating shipment status: $e');
       return false;
     }
   }
@@ -151,7 +152,7 @@ class ShipmentService {
       shipments.removeWhere((s) => s.id == shipmentId);
       return true;
     } catch (e) {
-      print('Error deleting shipment: $e');
+      debugPrint('Error deleting shipment: $e');
       return false;
     }
   }

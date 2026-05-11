@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../models/load.dart';
 
 class LoadService {
@@ -139,7 +140,7 @@ class LoadService {
       await Future.delayed(const Duration(seconds: 1));
       return _availableLoads;
     } catch (e) {
-      print('Error fetching loads: $e');
+      debugPrint('Error fetching loads: $e');
       return [];
     }
   }
@@ -175,7 +176,7 @@ class LoadService {
       if (load.id.isEmpty) return null;
       return load;
     } catch (e) {
-      print('Error fetching load: $e');
+      debugPrint('Error fetching load: $e');
       return null;
     }
   }
@@ -188,7 +189,7 @@ class LoadService {
       _availableLoads.removeWhere((load) => load.id == loadId);
       return true;
     } catch (e) {
-      print('Error booking load: $e');
+      debugPrint('Error booking load: $e');
       return false;
     }
   }
@@ -209,7 +210,7 @@ class LoadService {
                   .contains(destination.toLowerCase()))
           .toList();
     } catch (e) {
-      print('Error searching loads: $e');
+      debugPrint('Error searching loads: $e');
       return [];
     }
   }
@@ -228,7 +229,7 @@ class LoadService {
         return rateValue >= minRate && rateValue <= maxRate;
       }).toList();
     } catch (e) {
-      print('Error filtering loads: $e');
+      debugPrint('Error filtering loads: $e');
       return [];
     }
   }
