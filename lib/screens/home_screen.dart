@@ -1,9 +1,15 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 import '../services/auth_service.dart';
 import '../services/shipment_service.dart';
 import '../models/shipment.dart';
 import '../models/vehicle_profile.dart';
 import '../widgets/custom_bottom_nav.dart';
+import 'shipment_detail_screen.dart';
+import 'navigation_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,7 +18,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> {
   final AuthService _auth = AuthService();
   final ShipmentService _shipmentService = ShipmentService();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -21,36 +27,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   VehicleProfile? _vehicleProfile;
   bool _loading = true;
   bool _showCongrats = false;
-  late AnimationController _confettiController;
-  late AnimationController _cardController;
-  late Animation<double> _confettiOpacity;
-  late Animation<double> _cardScale;
+  bool _isOnDuty = false;
+  String _locationText = 'Fetching location...';
 
   @override
   void initState() {
     super.initState();
-    _confettiController = AnimationController(
-      duration: const Duration(seconds: 5),
-      vsync: this,
-    );
-    _cardController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _confettiOpacity = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _confettiController, curve: Curves.easeOut),
-    );
-    _cardScale = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _cardController, curve: Curves.elasticOut),
-    );
     _loadHomeData();
-  }
-
-  @override
-  void dispose() {
-    _confettiController.dispose();
-    _cardController.dispose();
-    super.dispose();
+    _fetchLocation();
   }
 
   Future<void> _loadHomeData() async {
@@ -67,6 +51,49 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     });
   }
 
+  Future<void> _fetchLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) setState(() => _locationText = 'Location unavailable');
+        return;
+      }
+      LocationPermission perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+        if (perm == LocationPermission.denied) {
+          if (mounted) setState(() => _locationText = 'Permission denied');
+          return;
+        }
+      }
+      if (perm == LocationPermission.deniedForever) {
+        if (mounted) setState(() => _locationText = 'Permission denied');
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition(
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.medium));
+      final url = Uri.parse(
+          'https://nominatim.openstreetmap.org/reverse'
+          '?lat=${pos.latitude}&lon=${pos.longitude}&format=json');
+      final res = await http.get(url,
+          headers: {'User-Agent': 'FlowDriverApp/1.0'});
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final addr = data['address'] as Map<String, dynamic>? ?? {};
+        final suburb = addr['suburb'] ?? addr['neighbourhood'] ?? addr['village'] ?? '';
+        final city = addr['city'] ?? addr['town'] ?? addr['county'] ?? '';
+        final parts = [suburb, city].where((s) => (s as String).isNotEmpty).toList();
+        if (mounted) {
+          setState(() => _locationText =
+              parts.isNotEmpty ? parts.take(2).join(', ') : 'Location found');
+        }
+      }
+    } catch (_) {
+      if (mounted) setState(() => _locationText = 'Location unavailable');
+    }
+  }
+
   Future<void> _navigateToVehicleRegistration() async {
     final result = await Navigator.pushNamed(context, '/vehicle_registration');
     if (result == true && mounted) {
@@ -77,9 +104,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   void _showCongratulations() {
     setState(() => _showCongrats = true);
-    _confettiController.forward(from: 0.0);
-    _cardController.forward(from: 0.0);
-    Future.delayed(const Duration(seconds: 4), () {
+    Future.delayed(const Duration(seconds: 5), () {
       if (mounted) {
         setState(() => _showCongrats = false);
       }
@@ -111,47 +136,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     await _loadHomeData();
   }
 
-  Future<void> _cancelShipment(Shipment s) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Cancel Shipment?',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(
-            'Are you sure you want to cancel load ${s.loadId}? This cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Keep Shipment'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Cancel Shipment'),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      await _shipmentService.deleteShipment(s.id);
-      await _loadHomeData();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Shipment cancelled. You can now book a new load.'),
-            backgroundColor: Colors.teal,
-          ),
-        );
-      }
-    }
-  }
-
   void _onNavTap(int index) {
     if (index == 2) {
       _openLoadBoard();
@@ -166,8 +150,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
-    final currentDate =
-        '${months[now.month - 1]}, ${now.day.toString().padLeft(2, '0')}, ${now.year}';
+    final currentDate = '${now.day} ${months[now.month - 1]}, ${now.year}';
 
     return Scaffold(
       key: _scaffoldKey,
@@ -194,72 +177,168 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ── Status bar ──────────────────────────────────────────
                     Row(
                       children: [
                         GestureDetector(
                           onTap: () => _scaffoldKey.currentState?.openDrawer(),
                           child: CircleAvatar(
-                            radius: 25,
+                            radius: 22,
                             backgroundColor: const Color(0xFF1E1128),
                             child: Text(
                               username.isNotEmpty ? username[0].toUpperCase() : 'D',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 20,
+                                fontSize: 18,
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () => setState(() => _isOnDuty = !_isOnDuty),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            width: 72,
+                            height: 36,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E1128),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(18),
+                              color: _isOnDuty
+                                  ? const Color(0xFF7A3FF2)
+                                  : Colors.grey.shade300,
                             ),
-                            child: Row(
+                            child: Stack(
+                              alignment: Alignment.center,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    'WELCOME ${username.toUpperCase()}!',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
+                                AnimatedPositioned(
+                                  duration: const Duration(milliseconds: 250),
+                                  left: _isOnDuty ? null : 4,
+                                  right: _isOnDuty ? 4 : null,
+                                  child: Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: const BoxDecoration(
                                       color: Colors.white,
-                                      fontSize: 14,
+                                      shape: BoxShape.circle,
                                     ),
                                   ),
                                 ),
-                                const Icon(Icons.search, size: 20, color: Colors.white70),
-                                const SizedBox(width: 15),
-                                const Icon(Icons.notifications, size: 20, color: Colors.white70),
+                                Positioned(
+                                  left: _isOnDuty ? 8 : null,
+                                  right: _isOnDuty ? null : 8,
+                                  child: Text(
+                                    _isOnDuty ? 'ON' : 'OFF',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: _isOnDuty
+                                          ? Colors.white
+                                          : Colors.black54,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                         ),
+                        const Spacer(),
+                        Icon(Icons.search, size: 22, color: Colors.grey.shade700),
+                        const SizedBox(width: 14),
+                        Icon(Icons.notifications_none_rounded,
+                            size: 22, color: Colors.grey.shade700),
                       ],
                     ),
-                    const SizedBox(height: 25),
-                    Text(
-                      currentDate,
-                      style: const TextStyle(
-                        color: Colors.black87,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(height: 14),
+                    // ── Welcome card ─────────────────────────────────────────
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1128),
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome, $username!',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              const Icon(Icons.location_on_rounded,
+                                  size: 14, color: Color(0xFFCE9FFC)),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  _locationText,
+                                  style: const TextStyle(
+                                    color: Color(0xFFCE9FFC),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.calendar_today_rounded,
+                                  size: 13, color: Colors.white54),
+                              const SizedBox(width: 4),
+                              Text(
+                                currentDate,
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      '5th Avenue, New York, NYC',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    const SizedBox(height: 18),
+                    // ── Quick-action tiles (always visible) ──────────────────
+                    Row(
+                      children: [
+                        Expanded(
+                            child: _buildActionCard(
+                                Icons.local_gas_station, 'Fuel Log',
+                                onTap: () =>
+                                    Navigator.pushNamed(context, '/fuel_log'))),
+                        const SizedBox(width: 12),
+                        Expanded(
+                            child: _buildActionCard(
+                                Icons.task_alt_rounded, 'Tasks')),
+                        const SizedBox(width: 12),
+                        Expanded(
+                            child: _buildActionCard(
+                            Icons.support_agent_rounded,
+                            'Customer Support',
+                            onTap: () => Navigator.pushNamed(
+                              context, '/customer_support'))),
+                      ],
                     ),
-                    const SizedBox(height: 25),
+                    const SizedBox(height: 22),
+                    // ── Current Shipment ─────────────────────────────────────
                     const Text(
                       'Current Shipment',
                       style: TextStyle(
@@ -280,13 +359,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.black,
+                          color: const Color(0xFFC07BFE),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Column(
                           children: [
                             const Text('No shipment available',
-                                style: TextStyle(color: Colors.white70)),
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600)),
                             const SizedBox(height: 12),
                             ElevatedButton(
                               onPressed: _openLoadBoard,
@@ -305,29 +386,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     if (!_loading && _vehicleProfile == null)
                       _buildProfileProgressCard(),
                     if (!_loading && _vehicleProfile != null)
-                      Column(
-                        children: [
-                            Row(
-                            children: [
-                              Expanded(
-                                  child: _buildActionCard(
-                                      Icons.local_gas_station, 'Fuel log',
-                                      onTap: () => Navigator.pushNamed(
-                                          context, '/fuel_log'))),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                  child: _buildActionCard(
-                                      Icons.history, 'Maintenance\nHistory')),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                  child: _buildActionCard(
-                                      Icons.payments, 'Earnings')),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          _buildVehicleInfoCard(),
-                        ],
-                      ),
+                      _buildVehicleInfoCard(),
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -335,74 +394,66 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
           if (_showCongrats)
-            IgnorePointer(
-              child: FadeTransition(
-                opacity: _confettiOpacity,
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: Center(
                 child: Container(
-                  color: Colors.black.withOpacity(0.5),
-                  child: Center(
-                    child: ScaleTransition(
-                      scale: _cardScale,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 40),
-                        padding: const EdgeInsets.all(30),
+                  margin: const EdgeInsets.symmetric(horizontal: 40),
+                  padding: const EdgeInsets.all(30),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 30,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
+                          color: const Color(0xFF8E5AF7).withOpacity(0.12),
+                          shape: BoxShape.circle,
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF8E5AF7).withOpacity(0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.celebration,
-                                size: 60,
-                                color: Color(0xFF8E5AF7),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            const Text(
-                              'Congratulations!',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF1E1128),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Profile 100% Complete',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF8E5AF7),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'You can now book loads and start earning!',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ],
+                        child: const Icon(
+                          Icons.celebration,
+                          size: 60,
+                          color: Color(0xFF8E5AF7),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Congratulations!',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1E1128),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Profile 100% Complete',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF8E5AF7),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'You can now book loads and start earning!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -680,16 +731,61 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  Future<LatLng?> _geocode(String place) async {
+    final uri = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?q=${Uri.encodeQueryComponent(place)}&format=json&limit=1');
+    final resp = await http.get(uri, headers: {'User-Agent': 'FlowApp/1.0'});
+    if (resp.statusCode == 200) {
+      final data = json.decode(resp.body) as List;
+      if (data.isNotEmpty) {
+        return LatLng(
+          double.parse(data[0]['lat']),
+          double.parse(data[0]['lon']),
+        );
+      }
+    }
+    return null;
+  }
+
+  Future<void> _goToMap(Shipment s) async {
+    if (NavigationScreen.savedStartLocation != null) {
+      final origin = await _geocode(s.origin.isNotEmpty ? s.origin : 'Dallas, TX');
+      final destination = await _geocode(s.destination.isNotEmpty ? s.destination : 'Atlanta, GA');
+      if (origin != null && destination != null && mounted) {
+        Navigator.pushNamed(
+          context,
+          '/navigation',
+          arguments: {
+            'shipment': s,
+            'origin': origin,
+            'destination': destination,
+          },
+        ).then((_) => _loadHomeData());
+        return;
+      }
+    }
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ShipmentDetailScreen(
+          shipment: s,
+          autoNavigate: true,
+        ),
+      ),
+    ).then((_) => _loadHomeData());
+  }
+
   Widget _buildShipmentCard(Shipment s) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: const Color(0xFFC07BFE),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: const Color(0xFFC07BFE).withOpacity(0.35),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -707,7 +803,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Text(s.commodity.isNotEmpty ? s.commodity : '-',
               style: const TextStyle(color: Colors.white70, fontSize: 12)),
           const SizedBox(height: 12),
-          const Divider(color: Colors.white24, height: 1, thickness: 1),
+          const Divider(color: Colors.white30, height: 1, thickness: 1),
           const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -716,7 +812,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   const Icon(Icons.radio_button_checked,
                       color: Colors.white, size: 18),
-                  Container(width: 2, height: 35, color: Colors.white24),
+                  Container(
+                      width: 2, height: 35, color: Colors.white30),
                   const Icon(Icons.radio_button_unchecked,
                       color: Colors.white, size: 18),
                 ],
@@ -733,7 +830,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             fontSize: 15)),
                     Text(s.originDate.isNotEmpty ? s.originDate : '-',
                         style: const TextStyle(
-                            color: Colors.white54, fontSize: 11)),
+                            color: Colors.white70, fontSize: 11)),
                     const SizedBox(height: 16),
                     Text(s.destination.isNotEmpty ? s.destination : '-',
                         style: const TextStyle(
@@ -742,7 +839,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             fontSize: 15)),
                     Text(s.destinationDate.isNotEmpty ? s.destinationDate : '-',
                         style: const TextStyle(
-                            color: Colors.white54, fontSize: 11)),
+                            color: Colors.white70, fontSize: 11)),
                   ],
                 ),
               ),
@@ -752,10 +849,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   const SizedBox(height: 30),
                   ElevatedButton(
-                    onPressed: () => Navigator.pushNamed(
-                            context, '/shipment_detail',
-                            arguments: s)
-                        .then((_) => _loadHomeData()),
+                    onPressed: () => _goToMap(s),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal.shade400,
                       foregroundColor: Colors.white,
@@ -767,25 +861,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: const Text('Go to Map',
                         style: TextStyle(
                             fontSize: 12, fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => _cancelShipment(s),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade900,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -907,10 +982,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Logout', style: TextStyle(color: Colors.red)),
-            onTap: () {
-              _auth.logout();
-              Navigator.pushNamedAndRemoveUntil(
-                  context, '/login', (route) => false);
+            onTap: () async {
+              final nav = Navigator.of(context);
+              await _auth.logout();
+              nav.pushNamedAndRemoveUntil('/login', (route) => false);
             },
           ),
         ],

@@ -14,6 +14,8 @@ class NavigationScreen extends StatefulWidget {
   final LatLng origin;
   final LatLng destination;
 
+  static LatLng? savedStartLocation;
+
   const NavigationScreen({
     super.key,
     required this.shipment,
@@ -52,7 +54,18 @@ class _NavigationScreenState extends State<NavigationScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _showLocationDialog());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (NavigationScreen.savedStartLocation != null) {
+        setState(() {
+          _currentLocation = NavigationScreen.savedStartLocation;
+          _awaitingLocation = false;
+        });
+        _fetchRoute(NavigationScreen.savedStartLocation!, widget.origin);
+        _startGpsTracking();
+      } else {
+        _showLocationDialog();
+      }
+    });
   }
 
   @override
@@ -71,9 +84,55 @@ class _NavigationScreenState extends State<NavigationScreen> {
       _currentLocation = center;
       _loadingRoute = true;
       _awaitingLocation = false;
+      NavigationScreen.savedStartLocation = center;
     });
     await _fetchRoute(center, widget.origin);
     _startGpsTracking();
+  }
+
+  // ─── Use device GPS as start ──────────────────────────────────────────────
+  Future<void> _useCurrentLocation(BuildContext ctx) async {
+    Navigator.pop(ctx);
+    setState(() {
+      _loadingRoute = true;
+      _awaitingLocation = false;
+    });
+    try {
+      LocationPermission perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+      }
+      if (perm == LocationPermission.deniedForever ||
+          perm == LocationPermission.denied) {
+        if (mounted) {
+          setState(() {
+            _awaitingLocation = true;
+            _loadingRoute = false;
+          });
+          _showLocationDialog();
+        }
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition(
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.high));
+      final loc = LatLng(pos.latitude, pos.longitude);
+      if (!mounted) return;
+      setState(() {
+        _currentLocation = loc;
+        NavigationScreen.savedStartLocation = loc;
+      });
+      await _fetchRoute(loc, widget.origin);
+      _startGpsTracking();
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _awaitingLocation = true;
+          _loadingRoute = false;
+        });
+        _showLocationDialog();
+      }
+    }
   }
 
   // ─── Geocoding ───────────────────────────────────────────────────────────
@@ -280,6 +339,34 @@ class _NavigationScreenState extends State<NavigationScreen> {
                 Expanded(child: Divider(color: Colors.grey.shade300)),
               ]),
               const SizedBox(height: 12),
+              // ── Use Current Location button ──
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _useCurrentLocation(ctx),
+                  icon: const Icon(Icons.my_location, size: 18),
+                  label: const Text('Use Current Location',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // ── OR divider ──
+              Row(children: [
+                Expanded(child: Divider(color: Colors.grey.shade300)),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Text('OR', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                ),
+                Expanded(child: Divider(color: Colors.grey.shade300)),
+              ]),
+              const SizedBox(height: 12),
               // ── Drop pin button ──
               SizedBox(
                 width: double.infinity,
@@ -346,7 +433,10 @@ class _NavigationScreenState extends State<NavigationScreen> {
                   return;
                 }
 
-                setState(() => _currentLocation = loc);
+                setState(() {
+                  _currentLocation = loc;
+        NavigationScreen.savedStartLocation = loc;
+                });
                 await _fetchRoute(loc, widget.origin);
                 // Start live GPS tracking in background
                 _startGpsTracking();

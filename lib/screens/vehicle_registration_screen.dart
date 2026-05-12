@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import '../models/vehicle_profile.dart';
 
@@ -44,6 +46,8 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   String? _registrationPdfPath;
   String? _insurancePdfPath;
   bool _isLoading = false;
+  bool _isLoadingVin = false;
+  bool _showAllFields = false;
 
   @override
   void initState() {
@@ -74,6 +78,187 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     _equipmentType = profile.equipmentType;
     _registrationDocumentType = profile.registrationDocumentType;
     _insuranceDocumentType = profile.insuranceDocumentType;
+    _showAllFields = true;
+  }
+
+  Future<void> _lookupVin() async {
+    final vin = _vinController.text.trim();
+    if (vin.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a VIN first.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    if (vin.length < 11) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('VIN must be at least 11 characters.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoadingVin = true);
+
+    try {
+      final uri = Uri.parse(
+        'https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/$vin?format=json',
+      );
+      final resp = await http.get(uri);
+      if (!mounted) return;
+
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body) as Map<String, dynamic>;
+        final results = data['Results'] as List;
+
+        String? getValue(String variable) {
+          for (final r in results) {
+            if (r['Variable'] == variable) {
+              final v = (r['Value'] as String?)?.trim() ?? '';
+              return v.isNotEmpty ? v : null;
+            }
+          }
+          return null;
+        }
+
+        final year = getValue('Model Year');
+        final make = getValue('Make');
+        final model = getValue('Model');
+        final bodyClass = getValue('Body Class');
+        final engineCylinders = getValue('Engine Number of Cylinders');
+        final displacement = getValue('Displacement (L)');
+        final fuelType = getValue('Fuel Type - Primary');
+        final plant = getValue('Plant City');
+        final manufacturer = getValue('Manufacturer Name');
+
+        if (year == null && make == null && model == null) {
+          setState(() => _isLoadingVin = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No vehicle data found for this VIN.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        setState(() {
+          if (year != null) _yearController.text = year;
+          if (make != null) _makeController.text = make;
+          if (model != null) _modelController.text = model;
+          _isLoadingVin = false;
+          _showAllFields = true;
+        });
+
+        // Show decoded details in a dialog
+        final details = <String>[];
+        if (year != null) details.add('Year: $year');
+        if (make != null) details.add('Make: $make');
+        if (model != null) details.add('Model: $model');
+        if (manufacturer != null) details.add('Manufacturer: $manufacturer');
+        if (bodyClass != null) details.add('Body: $bodyClass');
+        if (engineCylinders != null) details.add('Cylinders: $engineCylinders');
+        if (displacement != null) details.add('Displacement: ${displacement}L');
+        if (fuelType != null) details.add('Fuel: $fuelType');
+        if (plant != null) details.add('Plant: $plant');
+
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.check_circle,
+                        color: Colors.green, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text('VIN Decoded',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(vin,
+                      style: const TextStyle(
+                          color: Colors.grey, fontSize: 12,
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 16),
+                  ...details.map((d) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(d,
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black87)),
+                      )),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Year, Make & Model fields have been populated.'),
+                        backgroundColor: Colors.teal,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Apply'),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        setState(() => _isLoadingVin = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to connect to NHTSA.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => _isLoadingVin = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _saveVehicleRegistration() async {
@@ -96,7 +281,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     final profile = VehicleProfile(
       equipmentType: _equipmentType ?? '',
       licensePlate: _licensePlateController.text.trim(),
-      state: _stateController.text.trim(),
+      state: '',
       vinNumber: _vinController.text.trim(),
       year: _yearController.text.trim(),
       make: _makeController.text.trim(),
@@ -104,7 +289,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       trailerLength: _trailerLengthController.text.trim(),
       trailerWidth: _trailerWidthController.text.trim(),
       maxWeight: _maxWeightController.text.trim(),
-      internalFleetId: _internalFleetIdController.text.trim(),
+      internalFleetId: '',
       registrationDocumentLabel: _registrationDocumentController.text.trim(),
       registrationDocumentType: _registrationDocumentType,
       insuranceDocumentLabel: _insuranceDocumentController.text.trim(),
@@ -151,6 +336,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       _insuranceImage = null;
       _registrationPdfPath = null;
       _insurancePdfPath = null;
+      _showAllFields = false;
     });
   }
 
@@ -260,6 +446,36 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     );
   }
 
+  Widget _buildVinLookupButton() {
+    return SizedBox(
+      height: 56,
+      child: ElevatedButton.icon(
+        onPressed: _isLoadingVin ? null : _lookupVin,
+        icon: _isLoadingVin
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.search, size: 18),
+        label: Text(
+          _isLoadingVin ? 'Looking up...' : 'Lookup',
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.teal,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: Colors.teal.shade300,
+          disabledForegroundColor: Colors.white70,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+      ),
+    );
+  }
+
   Widget _buildVehicleField(
     String label,
     TextEditingController controller, {
@@ -272,14 +488,16 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       child: TextFormField(
         controller: controller,
         validator: validator,
-        style: const TextStyle(color: Colors.black87),
+        style: const TextStyle(color: Colors.black87, fontSize: 14),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(
-            color: Colors.black87,
+          labelStyle: TextStyle(
+            color: Colors.grey.shade500,
             fontWeight: FontWeight.w600,
+            fontSize: 13,
           ),
           hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
           filled: true,
           fillColor: const Color(0xFFF7F6FB),
           border: OutlineInputBorder(
@@ -551,7 +769,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                                       ),
                                       SizedBox(height: 3),
                                       Text(
-                                        'Complete this first, then you can book a load.',
+                                        'Enter your VIN and tap Lookup to auto-fill details.',
                                         style: TextStyle(color: Colors.black54, fontSize: 12),
                                       ),
                                     ],
@@ -560,110 +778,114 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                               ],
                             ),
                             const SizedBox(height: 18),
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 12,
+                            // VIN lookup row (always visible)
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                SizedBox(
-                                  width: 145,
-                                  child: DropdownButtonFormField<String>(
-                                    isExpanded: true,
-                                    value: _equipmentType,
-                                    hint: const Text(
-                                      'Not Selected',
-                                      style: TextStyle(color: Colors.black),
-                                    ),
-                                    dropdownColor: Colors.white,
-                                    style: const TextStyle(color: Colors.black),
-                                    decoration: InputDecoration(
-                                      labelText: 'Equipment Type',
-                                      labelStyle: const TextStyle(
-                                        color: Colors.black87,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      filled: true,
-                                      fillColor: const Color(0xFFF7F6FB),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(color: Colors.grey.shade200),
-                                      ),
-                                    ),
-                                    items: const [
-                                      DropdownMenuItem(
-                                          value: 'Flatbed', child: Text('Flatbed', style: TextStyle(color: Colors.black))),
-                                      DropdownMenuItem(
-                                          value: 'Dry Van', child: Text('Dry Van', style: TextStyle(color: Colors.black))),
-                                      DropdownMenuItem(value: 'Reefer', child: Text('Reefer', style: TextStyle(color: Colors.black))),
-                                      DropdownMenuItem(
-                                          value: 'Step Deck', child: Text('Step Deck', style: TextStyle(color: Colors.black))),
-                                      DropdownMenuItem(value: 'Other', child: Text('Other', style: TextStyle(color: Colors.black))),
-                                    ],
-                                    onChanged: (value) {
-                                      setState(() => _equipmentType = value);
-                                    },
+                                Expanded(
+                                  child: _buildVehicleField(
+                                    'VIN Number',
+                                    _vinController,
+                                    validator: (value) =>
+                                        value == null || value.trim().isEmpty ? 'Required' : null,
+                                    width: double.infinity,
                                   ),
                                 ),
-                                _buildVehicleField(
-                                  'License Plate',
-                                  _licensePlateController,
-                                  validator: (value) =>
-                                      value == null || value.trim().isEmpty ? 'Required' : null,
-                                ),
-                                _buildVehicleField(
-                                  'State',
-                                  _stateController,
-                                  validator: (value) =>
-                                      value == null || value.trim().isEmpty ? 'Required' : null,
-                                ),
-                                _buildVehicleField(
-                                  'VIN Number',
-                                  _vinController,
-                                  validator: (value) =>
-                                      value == null || value.trim().isEmpty ? 'Required' : null,
-                                ),
-                                _buildVehicleField(
-                                  'Year',
-                                  _yearController,
-                                  validator: (value) =>
-                                      value == null || value.trim().isEmpty ? 'Required' : null,
-                                ),
-                                _buildVehicleField(
-                                  'Make',
-                                  _makeController,
-                                  validator: (value) =>
-                                      value == null || value.trim().isEmpty ? 'Required' : null,
-                                ),
-                                _buildVehicleField(
-                                  'Model',
-                                  _modelController,
-                                  validator: (value) =>
-                                      value == null || value.trim().isEmpty ? 'Required' : null,
-                                ),
-                                _buildVehicleField(
-                                  'Trailer Length (ft)',
-                                  _trailerLengthController,
-                                  validator: (value) =>
-                                      value == null || value.trim().isEmpty ? 'Required' : null,
-                                ),
-                                _buildVehicleField(
-                                  'Trailer Width (ft)',
-                                  _trailerWidthController,
-                                  validator: (value) =>
-                                      value == null || value.trim().isEmpty ? 'Required' : null,
-                                ),
-                                _buildVehicleField(
-                                  'Max Weight (lbs)',
-                                  _maxWeightController,
-                                  validator: (value) =>
-                                      value == null || value.trim().isEmpty ? 'Required' : null,
-                                ),
-                                _buildVehicleField(
-                                  'Internal Fleet ID',
-                                  _internalFleetIdController,
-                                  hint: 'Optional',
-                                ),
+                                const SizedBox(width: 12),
+                                _buildVinLookupButton(),
                               ],
                             ),
+                            if (_showAllFields) ...[
+                              const SizedBox(height: 18),
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 12,
+                                children: [
+                                  SizedBox(
+                                    width: 145,
+                                    child: DropdownButtonFormField<String>(
+                                      isExpanded: true,
+                                      value: _equipmentType,
+                                    hint: const Text(
+                                      'Not Selected',
+                                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                                    ),
+                                    dropdownColor: Colors.white,
+                                    style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w400),
+                                      decoration: InputDecoration(
+                                        labelText: 'Equipment Type',
+                                        labelStyle: TextStyle(
+                                          color: Colors.grey.shade500,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                        filled: true,
+                                        fillColor: const Color(0xFFF7F6FB),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(color: Colors.grey.shade200),
+                                        ),
+                                      ),
+                                    items: const [
+                                      DropdownMenuItem(
+                                          value: 'Flatbed', child: Text('Flatbed', style: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w400))),
+                                      DropdownMenuItem(
+                                          value: 'Dry Van', child: Text('Dry Van', style: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w400))),
+                                      DropdownMenuItem(value: 'Reefer', child: Text('Reefer', style: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w400))),
+                                      DropdownMenuItem(
+                                          value: 'Step Deck', child: Text('Step Deck', style: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w400))),
+                                      DropdownMenuItem(value: 'Other', child: Text('Other', style: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w400))),
+                                    ],
+                                      onChanged: (value) {
+                                        setState(() => _equipmentType = value);
+                                      },
+                                    ),
+                                  ),
+                                  _buildVehicleField(
+                                    'License Plate',
+                                    _licensePlateController,
+                                    validator: (value) =>
+                                        value == null || value.trim().isEmpty ? 'Required' : null,
+                                  ),
+                                  _buildVehicleField(
+                                    'Year',
+                                    _yearController,
+                                    validator: (value) =>
+                                        value == null || value.trim().isEmpty ? 'Required' : null,
+                                  ),
+                                  _buildVehicleField(
+                                    'Make',
+                                    _makeController,
+                                    validator: (value) =>
+                                        value == null || value.trim().isEmpty ? 'Required' : null,
+                                  ),
+                                  _buildVehicleField(
+                                    'Model',
+                                    _modelController,
+                                    validator: (value) =>
+                                        value == null || value.trim().isEmpty ? 'Required' : null,
+                                  ),
+                                  _buildVehicleField(
+                                    'Max Weight (lbs)',
+                                    _maxWeightController,
+                                    validator: (value) =>
+                                        value == null || value.trim().isEmpty ? 'Required' : null,
+                                  ),
+                                  _buildVehicleField(
+                                    'Trailer Length (ft)',
+                                    _trailerLengthController,
+                                    validator: (value) =>
+                                        value == null || value.trim().isEmpty ? 'Required' : null,
+                                  ),
+                                  _buildVehicleField(
+                                    'Trailer Width (ft)',
+                                    _trailerWidthController,
+                                    validator: (value) =>
+                                        value == null || value.trim().isEmpty ? 'Required' : null,
+                                  ),
+                                ],
+                              ),
+                            ],
                             const SizedBox(height: 18),
                             const Text(
                               'Documents',

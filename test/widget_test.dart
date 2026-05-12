@@ -10,7 +10,7 @@ import 'package:flow_app/main.dart';
 
 void main() {
   testWidgets('shows the intro screen', (WidgetTester tester) async {
-    await tester.pumpWidget(const FlowApp());
+    await tester.pumpWidget(const FlowApp(startLoggedIn: false));
 
     expect(find.text('FLOW'), findsOneWidget);
     expect(find.text('Login'), findsOneWidget);

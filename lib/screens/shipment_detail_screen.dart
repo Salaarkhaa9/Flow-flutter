@@ -4,10 +4,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import '../models/shipment.dart';
+import '../services/shipment_service.dart';
 
 class ShipmentDetailScreen extends StatefulWidget {
   final Shipment? shipment;
-  const ShipmentDetailScreen({super.key, this.shipment});
+  final bool autoNavigate;
+  const ShipmentDetailScreen({super.key, this.shipment, this.autoNavigate = false});
 
   @override
   State<ShipmentDetailScreen> createState() => _ShipmentDetailScreenState();
@@ -15,6 +17,7 @@ class ShipmentDetailScreen extends StatefulWidget {
 
 class _ShipmentDetailScreenState extends State<ShipmentDetailScreen> {
   final MapController _mapController = MapController();
+  final ShipmentService _shipmentService = ShipmentService();
   List<LatLng> _routePoints = [];
   LatLng? _originLatLng;
   LatLng? _destinationLatLng;
@@ -90,6 +93,15 @@ class _ShipmentDetailScreenState extends State<ShipmentDetailScreen> {
         CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(60)),
       );
     }
+
+    // Auto-push to navigation if requested by caller
+    if (widget.autoNavigate &&
+        _originLatLng != null &&
+        _destinationLatLng != null &&
+        mounted) {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _openNavigation());
+    }
   }
 
   void _openNavigation() {
@@ -108,6 +120,40 @@ class _ShipmentDetailScreenState extends State<ShipmentDetailScreen> {
         'destination': _destinationLatLng,
       },
     );
+  }
+
+  Future<void> _cancelShipment() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Cancel Shipment?',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(
+            'Are you sure you want to cancel load '
+            '${widget.shipment?.loadId ?? ''}? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Keep Shipment'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Cancel Shipment'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true && widget.shipment != null) {
+      await _shipmentService.deleteShipment(widget.shipment!.id);
+      if (mounted) Navigator.pop(context);
+    }
   }
 
   @override
@@ -188,11 +234,11 @@ class _ShipmentDetailScreenState extends State<ShipmentDetailScreen> {
                       ),
                     ),
                     ElevatedButton.icon(
-                      onPressed: _openNavigation,
-                      icon: const Icon(Icons.navigation, size: 14),
-                      label: const Text('Navigate', style: TextStyle(fontSize: 12)),
+                      onPressed: _cancelShipment,
+                      icon: const Icon(Icons.cancel_outlined, size: 14),
+                      label: const Text('Cancel', style: TextStyle(fontSize: 12)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
+                        backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -239,29 +285,36 @@ class _ShipmentDetailScreenState extends State<ShipmentDetailScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                shape: BoxShape.circle,
+                        Flexible(
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.inventory_2_outlined, color: Colors.brown),
                               ),
-                              child: const Icon(Icons.inventory_2_outlined, color: Colors.brown),
-                            ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(s?.loadId ?? '549SD00X87',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
-                                Text('${s?.commodity ?? 'Freight'} · Reefer',
-                                    style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                              ],
-                            ),
-                          ],
+                              const SizedBox(width: 12),
+                              Flexible(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(s?.loadId ?? '549SD00X87',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                                    Text('${s?.commodity ?? 'Freight'} · Reefer',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [

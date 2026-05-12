@@ -7,6 +7,7 @@ import 'screens/shipment_detail_screen.dart';
 import 'screens/load_board_screen.dart';
 import 'screens/load_details_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/customer_support_screen.dart';
 import 'screens/navigation_screen.dart';
 import 'screens/vehicle_registration_screen.dart';
 import 'screens/fuel_log_screen.dart';
@@ -14,13 +15,18 @@ import 'models/load.dart';
 import 'models/shipment.dart';
 import 'theme/app_theme.dart';
 import 'package:latlong2/latlong.dart';
+import 'services/auth_service.dart';
 
-void main() {
-  runApp(const FlowApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Restore persisted session (if any) before the widget tree is built.
+  final bool loggedIn = await AuthService.tryAutoLogin();
+  runApp(FlowApp(startLoggedIn: loggedIn));
 }
 
 class FlowApp extends StatelessWidget {
-  const FlowApp({super.key});
+  final bool startLoggedIn;
+  const FlowApp({super.key, required this.startLoggedIn});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +34,8 @@ class FlowApp extends StatelessWidget {
       title: 'FLOW',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      initialRoute: '/',
+      // Skip the intro/login flow if the driver is already authenticated.
+      initialRoute: startLoggedIn ? '/home' : '/',
       routes: {
         '/': (context) => const IntroScreen(),
         '/login': (context) => const LoginScreen(),
@@ -36,6 +43,7 @@ class FlowApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/load_board': (context) => const LoadBoardScreen(),
+        '/customer_support': (context) => const CustomerSupportScreen(),
         '/load_details': (context) {
           final load = ModalRoute.of(context)?.settings.arguments as Load?;
           if (load == null) return const LoadBoardScreen();
@@ -49,8 +57,10 @@ class FlowApp extends StatelessWidget {
         '/navigation': (context) {
           final args = ModalRoute.of(context)?.settings.arguments as Map?;
           final shipment = args?['shipment'] as Shipment?;
-          final origin = args?['origin'] as LatLng? ?? const LatLng(32.78, -96.8);
-          final destination = args?['destination'] as LatLng? ?? const LatLng(33.74, -84.38);
+          final origin =
+              args?['origin'] as LatLng? ?? const LatLng(32.78, -96.8);
+          final destination =
+              args?['destination'] as LatLng? ?? const LatLng(33.74, -84.38);
           return NavigationScreen(
             shipment: shipment,
             origin: origin,
@@ -58,7 +68,8 @@ class FlowApp extends StatelessWidget {
           );
         },
         '/vehicle_registration': (context) {
-          final isEditing = ModalRoute.of(context)?.settings.arguments as bool? ?? false;
+          final isEditing =
+              ModalRoute.of(context)?.settings.arguments as bool? ?? false;
           return VehicleRegistrationScreen(isEditing: isEditing);
         },
         '/fuel_log': (context) => const FuelLogScreen(),
