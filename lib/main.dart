@@ -8,7 +8,7 @@ import 'screens/load_board_screen.dart';
 import 'screens/load_details_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/customer_support_screen.dart';
-import 'screens/navigation_screen.dart';
+import 'screens/order_history_screen.dart';
 import 'screens/vehicle_registration_screen.dart';
 import 'screens/fuel_log_screen.dart';
 import 'screens/stats_screen.dart';
@@ -18,7 +18,6 @@ import 'services/notification_service.dart';
 import 'models/load.dart';
 import 'models/shipment.dart';
 import 'theme/app_theme.dart';
-import 'package:latlong2/latlong.dart';
 import 'services/auth_service.dart';
 
 void main() async {
@@ -60,19 +59,6 @@ class FlowApp extends StatelessWidget {
               ModalRoute.of(context)?.settings.arguments as Shipment?;
           return ShipmentDetailScreen(shipment: shipment);
         },
-        '/navigation': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments as Map?;
-          final shipment = args?['shipment'] as Shipment?;
-          final origin =
-              args?['origin'] as LatLng? ?? const LatLng(32.78, -96.8);
-          final destination =
-              args?['destination'] as LatLng? ?? const LatLng(33.74, -84.38);
-          return NavigationScreen(
-            shipment: shipment,
-            origin: origin,
-            destination: destination,
-          );
-        },
         '/vehicle_registration': (context) {
           final isEditing =
               ModalRoute.of(context)?.settings.arguments as bool? ?? false;
@@ -82,6 +68,7 @@ class FlowApp extends StatelessWidget {
         '/stats': (context) => const StatsScreen(),
         '/search': (context) => const SearchScreen(),
         '/notifications': (context) => const NotificationScreen(),
+        '/order_history': (context) => const OrderHistoryScreen(),
       },
     );
   }

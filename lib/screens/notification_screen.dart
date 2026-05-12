@@ -78,6 +78,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
           bg: const Color(0xFF2196F3),
           fg: Colors.white
         );
+      case NotificationType.deliveryCompleted:
+        return (
+          icon: Icons.check_circle_rounded,
+          bg: const Color(0xFF4CAF50),
+          fg: Colors.white
+        );
       case NotificationType.generic:
         return (
           icon: Icons.notifications_rounded,

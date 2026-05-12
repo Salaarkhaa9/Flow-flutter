@@ -118,4 +118,10 @@ class NotificationService extends ChangeNotifier {
         body: 'Your fuel expense has been recorded successfully.',
         type: NotificationType.fuelLogged,
       );
+
+  Future<void> notifyDeliveryCompleted(String loadId) => add(
+        title: '✅ Delivery Completed!',
+        body: 'Load #$loadId has been delivered. Great job!',
+        type: NotificationType.deliveryCompleted,
+      );
 }

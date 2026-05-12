@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'package:latlong2/latlong.dart';
 import '../services/auth_service.dart';
 import '../services/shipment_service.dart';
 import '../services/notification_service.dart';
@@ -10,7 +9,6 @@ import '../models/shipment.dart';
 import '../models/vehicle_profile.dart';
 import '../widgets/custom_bottom_nav.dart';
 import 'shipment_detail_screen.dart';
-import 'navigation_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -139,7 +137,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onNavTap(int index) {
-    if (index == 2) {
+    if (index == 1) {
+      Navigator.pushNamed(context, '/order_history');
+    } else if (index == 2) {
       _openLoadBoard();
     } else if (index == 3) {
       Navigator.pushNamed(context, '/stats');
@@ -837,49 +837,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<LatLng?> _geocode(String place) async {
-    final uri = Uri.parse(
-        'https://nominatim.openstreetmap.org/search?q=${Uri.encodeQueryComponent(place)}&format=json&limit=1');
-    final resp = await http.get(uri, headers: {'User-Agent': 'FlowApp/1.0'});
-    if (resp.statusCode == 200) {
-      final data = json.decode(resp.body) as List;
-      if (data.isNotEmpty) {
-        return LatLng(
-          double.parse(data[0]['lat']),
-          double.parse(data[0]['lon']),
-        );
-      }
-    }
-    return null;
-  }
-
   Future<void> _goToMap(Shipment s) async {
-    if (NavigationScreen.savedStartLocation != null) {
-      final origin = await _geocode(s.origin.isNotEmpty ? s.origin : 'Dallas, TX');
-      final destination = await _geocode(s.destination.isNotEmpty ? s.destination : 'Atlanta, GA');
-      if (origin != null && destination != null && mounted) {
-        Navigator.pushNamed(
-          context,
-          '/navigation',
-          arguments: {
-            'shipment': s,
-            'origin': origin,
-            'destination': destination,
-          },
-        ).then((_) => _loadHomeData());
-        return;
-      }
-    }
     if (!mounted) return;
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ShipmentDetailScreen(
-          shipment: s,
-          autoNavigate: true,
-        ),
+        builder: (_) => ShipmentDetailScreen(shipment: s),
       ),
-    ).then((_) => _loadHomeData());
+    );
+    await _loadHomeData();
   }
 
   Widget _buildShipmentCard(Shipment s) {
@@ -1082,6 +1048,15 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               Navigator.pop(context);
               _navigateToVehicleRegistration();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.receipt_long_rounded, color: Colors.black87),
+            title: const Text('Order History',
+                style: TextStyle(color: Colors.black87)),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/order_history');
             },
           ),
           const Divider(),

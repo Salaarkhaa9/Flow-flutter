@@ -6,6 +6,7 @@ class ShipmentService {
   static final ShipmentService _instance = ShipmentService._internal();
 
   final Map<String, List<Shipment>> _userShipments = {};
+  final Map<String, List<Shipment>> _completedShipments = {};
 
   factory ShipmentService() {
     return _instance;
@@ -154,6 +155,61 @@ class ShipmentService {
     } catch (e) {
       debugPrint('Error deleting shipment: $e');
       return false;
+    }
+  }
+
+  // Complete a shipment (moves active → completed history)
+  Future<bool> completeShipment(String shipmentId) async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final currentUser = AuthService().currentUser;
+      if (currentUser == null) return false;
+
+      final userId = currentUser.mcNumber;
+      final active = _userShipments[userId] ?? [];
+      final idx = active.indexWhere((s) => s.id == shipmentId);
+      if (idx == -1) return false;
+
+      final shipment = active.removeAt(idx);
+
+      final completed = Shipment(
+        id: shipment.id,
+        loadId: shipment.loadId,
+        commodity: shipment.commodity,
+        origin: shipment.origin,
+        destination: shipment.destination,
+        originDate: shipment.originDate,
+        destinationDate: shipment.destinationDate,
+        weight: shipment.weight,
+        rate: shipment.rate,
+        status: 'Completed',
+        carrier: shipment.carrier,
+      );
+
+      _completedShipments.putIfAbsent(userId, () => []);
+      _completedShipments[userId]!.add(completed);
+      return true;
+    } catch (e) {
+      debugPrint('Error completing shipment: $e');
+      return false;
+    }
+  }
+
+  // Get completed (history) shipments for current user
+  Future<List<Shipment>> getCompletedShipments() async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final currentUser = AuthService().currentUser;
+      if (currentUser == null) return [];
+
+      return (_completedShipments[currentUser.mcNumber] ?? [])
+          .reversed
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching completed shipments: $e');
+      return [];
     }
   }
 }
