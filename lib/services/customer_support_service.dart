@@ -23,6 +23,8 @@ class CustomerSupportService {
     required List<SupportChatMessage> history,
     required String userMessage,
   }) async {
+    print('[CustomerSupport] Key length: ${_apiKey.length}');
+    print('[CustomerSupport] Key starts with: ${_apiKey.substring(0, _apiKey.length > 10 ? 10 : _apiKey.length)}');
     final response = await http.post(
       Uri.parse(_apiUrl),
       headers: {
