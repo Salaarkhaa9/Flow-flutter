@@ -5,7 +5,7 @@
       "name": "Flow App (Debug with .env)",
       "request": "launch",
       "type": "dart",
-      "toolArgs": [
+      "args": [
         "--dart-define-from-file=.env"
       ]
     }
