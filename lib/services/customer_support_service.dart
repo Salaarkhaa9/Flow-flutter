@@ -13,7 +13,7 @@ class SupportChatMessage {
 
 class CustomerSupportService {
   static const String _apiKey = 'YOUR_API_KEY_HERE';
-  static const String _model = 'minimax/minimax-m2.5:free';
+  static const String _model = 'minimax/minimax-m2.5';
   static const String _apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
   Future<String> sendMessage({

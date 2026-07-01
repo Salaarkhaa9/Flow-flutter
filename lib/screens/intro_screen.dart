@@ -10,17 +10,7 @@ class IntroScreen extends StatelessWidget {
     return Scaffold(
       body: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFB066FE),
-              Color(0xFF6A1B9A),
-              Colors.black,
-            ],
-          ),
-        ),
+        color: AppTheme.slateDeep,
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -29,41 +19,51 @@ class IntroScreen extends StatelessWidget {
               children: [
                 const Spacer(flex: 2),
 
-                // Logo icon only (no embedded text)
-                Image.asset(
-                  'assets/logo.png',
-                  height: 100,
-                  // force white tint so logo pops on the gradient
-                  color: Colors.white,
-                  colorBlendMode: BlendMode.srcIn,
+                // Lime glow circle behind logo
+                Container(
+                  width: 110,
+                  height: 110,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.limeVoltage.withOpacity(0.12),
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      'assets/logo.png',
+                      height: 64,
+                      color: AppTheme.limeVoltage,
+                      colorBlendMode: BlendMode.srcIn,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 20),
 
-                // Separate FLOW text — Montserrat Alternates, white
+                // FLOW brand text
                 Text(
                   'FLOW',
-                  style: GoogleFonts.montserratAlternates(
-                    fontSize: 48,
+                  style: GoogleFonts.outfit(
+                    fontSize: 52,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                     letterSpacing: 10,
                   ),
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Text(
                   'Move Loads',
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.outfit(
                     color: Colors.white70,
-                    fontSize: 24,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
                   'Not Mountains.',
-                  style: GoogleFonts.poppins(
-                    color: AppTheme.accentGreen,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
+                  style: GoogleFonts.outfit(
+                    color: AppTheme.limeVoltage,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 22,
                   ),
                 ),
 
@@ -72,58 +72,70 @@ class IntroScreen extends StatelessWidget {
                 Text(
                   'Simplifying freight life-cycle\nfrom booking to delivery',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 18,
-                    height: 1.5,
+                  style: GoogleFonts.inter(
+                    color: Colors.white60,
+                    fontSize: 16,
+                    height: 1.6,
                   ),
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 48),
 
-                // Login button
-                ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(context, '/login'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 60),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                // Login button — white pill
+                SizedBox(
+                  width: double.infinity,
+                  height: 58,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/login'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppTheme.slateDeep,
+                      shape: const StadiumBorder(),
+                      elevation: 0,
                     ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Login',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                      SizedBox(width: 10),
-                      Icon(Icons.arrow_forward, size: 20),
-                    ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Login',
+                          style: GoogleFonts.outfit(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Icon(Icons.arrow_forward, size: 18),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 14),
 
-                // Register button
-                ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(context, '/register'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryPurple,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 60),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                // Register button — lime-voltage pill
+                SizedBox(
+                  width: double.infinity,
+                  height: 58,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/register'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.limeVoltage,
+                      foregroundColor: AppTheme.slateDeep,
+                      shape: const StadiumBorder(),
+                      elevation: 0,
                     ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Get Started',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                      SizedBox(width: 10),
-                      Icon(Icons.arrow_forward, size: 20),
-                    ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Get Started',
+                          style: GoogleFonts.outfit(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Icon(Icons.arrow_forward, size: 18),
+                      ],
+                    ),
                   ),
                 ),
                 const Spacer(),

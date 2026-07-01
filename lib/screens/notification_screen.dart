@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/app_notification.dart';
 import '../services/notification_service.dart';
 
@@ -57,7 +58,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       case NotificationType.vehicleRegistered:
         return (
           icon: Icons.local_shipping_rounded,
-          bg: const Color(0xFF7A3FF2),
+          bg: const Color(0xFF0a2226),
           fg: Colors.white
         );
       case NotificationType.loadBooked:
@@ -98,17 +99,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final items = _displayed;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: Stack(
         children: [
           // ── Gradient header ───────────────────────────────────────────────
           Container(
-            height: 350,
+            height: 220,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFFCE9FFC), Color(0xFFF8F9FA)],
+                colors: [Color(0xFF0a2226), Color(0xFFFAFAFA)],
               ),
             ),
           ),
@@ -123,7 +124,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 15, vertical: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1128),
+                      color: const Color(0xFF0a2226),
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Row(
@@ -134,10 +135,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               color: Colors.white, size: 20),
                         ),
                         const SizedBox(width: 15),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Notifications',
-                            style: TextStyle(
+                            style: GoogleFonts.outfit(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -152,15 +153,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 10, vertical: 5),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF7A3FF2),
+                                  color: const Color(0xFFd6ff00),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Mark all read',
-                                  style: TextStyle(
-                                    color: Colors.white,
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF0a2226),
                                     fontSize: 11,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
@@ -201,9 +202,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 border: Border.all(
                                     color: Colors.white.withOpacity(0.3)),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Clear all',
-                                style: TextStyle(
+                                style: GoogleFonts.inter(
                                   color: Colors.white,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -279,19 +280,19 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
                                     color: isNew
-                                        ? const Color(0xFFEFE8FF)
+                                        ? const Color(0xFF0a2226).withOpacity(0.04)
                                         : Colors.white,
                                     borderRadius:
                                         BorderRadius.circular(18),
                                     border: Border.all(
                                       color: isNew
-                                          ? const Color(0xFFCEB5FF)
-                                          : const Color(0xFFEEEEEE),
+                                          ? const Color(0xFF0a2226).withOpacity(0.12)
+                                          : const Color(0xFFE4E4E7),
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black
-                                            .withOpacity(0.04),
+                                        color: const Color(0xFF0a2226)
+                                            .withOpacity(0.02),
                                         blurRadius: 8,
                                         offset: const Offset(0, 3),
                                       ),
@@ -324,13 +325,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                                 Expanded(
                                                   child: Text(
                                                     notif.title,
-                                                    style: TextStyle(
+                                                    style: GoogleFonts.outfit(
                                                       fontSize: 14,
                                                       fontWeight: isNew
                                                           ? FontWeight.w800
                                                           : FontWeight.w600,
                                                       color: const Color(
-                                                          0xFF1E1128),
+                                                          0xFF0a2226),
                                                     ),
                                                   ),
                                                 ),
@@ -344,7 +345,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                                     decoration:
                                                         const BoxDecoration(
                                                       color: Color(
-                                                          0xFF7A3FF2),
+                                                          0xFF0a2226),
                                                       shape:
                                                           BoxShape.circle,
                                                     ),
@@ -354,10 +355,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                             const SizedBox(height: 4),
                                             Text(
                                               _timeAgo(notif.createdAt),
-                                              style: TextStyle(
+                                              style: GoogleFonts.inter(
                                                 fontSize: 11,
                                                 color:
-                                                    Colors.grey.shade500,
+                                                    const Color(0xFF71717A),
                                                 fontWeight:
                                                     FontWeight.w500,
                                               ),
@@ -365,12 +366,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                             const SizedBox(height: 6),
                                             Text(
                                               notif.body,
-                                              style: TextStyle(
+                                              style: GoogleFonts.inter(
                                                 fontSize: 13,
                                                 color: isNew
                                                     ? const Color(
-                                                        0xFF2D1B69)
-                                                    : Colors.grey.shade600,
+                                                        0xFF18181B)
+                                                    : const Color(0xFF71717A),
                                                 fontWeight:
                                                     FontWeight.w500,
                                                 height: 1.4,
@@ -411,7 +412,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           const SizedBox(height: 16),
           Text(
             isUnread ? 'All caught up!' : 'No notifications yet',
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.grey.shade400,
@@ -422,7 +423,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               padding: const EdgeInsets.only(top: 6),
               child: Text(
                 'You have no unread notifications.',
-                style: TextStyle(
+                style: GoogleFonts.inter(
                     fontSize: 13, color: Colors.grey.shade400),
               ),
             ),
@@ -454,17 +455,17 @@ class _FilterChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF1E1128) : Colors.white,
+          color: selected ? const Color(0xFF0a2226) : Colors.white,
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: selected
-                ? const Color(0xFF1E1128)
+                ? const Color(0xFF0a2226)
                 : Colors.grey.shade300,
           ),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
+                    color: const Color(0xFF0a2226).withOpacity(0.12),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -476,7 +477,7 @@ class _FilterChip extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 color: selected ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
@@ -489,14 +490,14 @@ class _FilterChip extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: selected
-                      ? const Color(0xFF7A3FF2)
-                      : const Color(0xFFCE9FFC),
+                      ? const Color(0xFFd6ff00)
+                      : const Color(0xFFE4E4E7),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   badge!,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: selected ? const Color(0xFF0a2226) : const Color(0xFF71717A),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),

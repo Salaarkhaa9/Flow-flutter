@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -16,84 +17,102 @@ class CustomBottomNav extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       height: 75,
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(35),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.slateDeep.withOpacity(0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: AppTheme.borderColor, width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _navItem(Icons.home_outlined, 'Home', 0),
-          _navItem(Icons.explore_outlined, 'Orders', 1),
+          _navItem(Icons.home_outlined, Icons.home_rounded, 'Home', 0),
+          _navItem(Icons.explore_outlined, Icons.explore_rounded, 'Orders', 1),
           _buildCenterButton(),
-          _navItem(Icons.inventory_2_outlined, 'Load', 2),
-          _navItem(Icons.bar_chart, 'Stats', 3),
+          _navItem(Icons.inventory_2_outlined, Icons.inventory_2_rounded, 'Load', 2),
+          _navItem(Icons.bar_chart_outlined, Icons.bar_chart_rounded, 'Stats', 3),
         ],
       ),
     );
   }
 
   Widget _buildCenterButton() {
-    return GestureDetector(
-      onTap: () {},
-      child: Container(
-        width: 55,
-        height: 55,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: [Color(0xFFC07BFE), Color(0xFF8A30FA)],
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppTheme.slateDeep,
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Image.asset(
+            'assets/logo.png',
+            width: 22,
+            height: 22,
+            color: AppTheme.limeVoltage,
+            colorBlendMode: BlendMode.srcIn,
           ),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Image.asset(
-              'assets/logo.png',
-              width: 24,
-              height: 24,
-            ),
-            const Positioned(
-              top: 6,
-              right: 6,
-              child: Text(
+          Positioned(
+            top: 6,
+            right: 6,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+              decoration: BoxDecoration(
+                color: AppTheme.limeVoltage,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
                 'AI',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+                  color: AppTheme.slateDeep,
+                  fontSize: 7,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _navItem(IconData icon, String label, int index) {
+  Widget _navItem(
+      IconData outlinedIcon, IconData filledIcon, String label, int index) {
     final isSelected = index == currentIndex;
     return InkWell(
       onTap: () => onTap(index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? const Color(0xFFC07BFE) : Colors.white54,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? const Color(0xFFC07BFE) : Colors.white54,
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isSelected ? filledIcon : outlinedIcon,
+              color: isSelected ? AppTheme.slateDeep : AppTheme.textMuted,
+              size: 24,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? AppTheme.slateDeep : AppTheme.textMuted,
+                fontSize: 10,
+                fontWeight:
+                    isSelected ? FontWeight.w700 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

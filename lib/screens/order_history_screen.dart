@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/shipment.dart';
 import '../services/shipment_service.dart';
+import '../widgets/custom_bottom_nav.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -23,7 +24,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   Future<void> _loadOrders() async {
     setState(() => _loading = true);
     final list = await _shipmentService.getCompletedShipments();
-    if (mounted) setState(() { _orders = list; _loading = false; });
+    if (mounted) {
+      setState(() {
+        _orders = list;
+        _loading = false;
+      });
+    }
   }
 
   Widget _buildOrderCard(Shipment order) {
@@ -56,11 +62,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
-                            color: Color(0xFF1E1128))),
+                            color: Color(0xFF0a2226))),
                     const SizedBox(height: 3),
                     Text(order.commodity,
-                        style: const TextStyle(
-                            color: Colors.grey, fontSize: 12)),
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 12)),
                   ],
                 ),
               ),
@@ -73,8 +79,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                           color: Colors.black)),
                   const SizedBox(width: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(12),
@@ -104,9 +110,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             children: [
               Expanded(
                 child: _buildLocationBlock(
-                    Icons.radio_button_checked,
-                    order.origin,
-                    order.originDate),
+                    Icons.radio_button_checked, order.origin, order.originDate),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -114,9 +118,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                     size: 18, color: Colors.grey.shade400),
               ),
               Expanded(
-                child: _buildLocationBlock(
-                    Icons.location_on,
-                    order.destination,
+                child: _buildLocationBlock(Icons.location_on, order.destination,
                     order.destinationDate),
               ),
             ],
@@ -140,7 +142,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF7A3FF2)),
+        Icon(icon, size: 16, color: const Color(0xFF0a2226)),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -152,8 +154,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       fontSize: 13,
                       color: Colors.black87)),
               Text(date,
-                  style: const TextStyle(
-                      color: Colors.grey, fontSize: 11)),
+                  style: const TextStyle(color: Colors.grey, fontSize: 11)),
             ],
           ),
         ),
@@ -186,148 +187,162 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: Stack(
-        children: [
-          Container(
-            height: 350,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFCE9FFC), Color(0xFFF8F9FA)],
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: Stack(
+          children: [
+            Container(
+              height: 220,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF0a2226), Color(0xFFFAFAFA)],
+                ),
               ),
             ),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 15, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E1128),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.arrow_back,
-                              color: Colors.white, size: 20),
-                        ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              const Text(
-                                'Order History',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              if (_orders.isNotEmpty)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF7A3FF2),
-                                    borderRadius:
-                                        BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '${_orders.length}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: _loadOrders,
-                          icon: const Icon(Icons.refresh,
-                              color: Colors.white70, size: 20),
-                          splashRadius: 20,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (_orders.isNotEmpty)
+            SafeArea(
+              child: Column(
+                children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        _buildSummaryChip(
-                            Icons.receipt_long_rounded,
-                            '${_orders.length} Completed'),
-                        const SizedBox(width: 10),
-                        _buildSummaryChip(
-                            Icons.trending_up_rounded,
-                            '\$${_orders.length * 2500}+ Earned'),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 14),
-                Expanded(
-                  child: _loading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                              color: Color(0xFF7A3FF2)))
-                      : _orders.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.receipt_long_outlined,
-                                      size: 56,
-                                      color: Colors.grey.shade300),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'No completed orders yet',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey.shade400,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0a2226),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamedAndRemoveUntil(
+                                  context, '/home', (route) => false);
+                            },
+                            child: const Icon(Icons.arrow_back,
+                                color: Colors.white, size: 20),
+                          ),
+                          const SizedBox(width: 15),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const Text(
+                                  'Order History',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                if (_orders.isNotEmpty)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFd6ff00),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '${_orders.length}',
+                                      style: const TextStyle(
+                                        color: Color(0xFF0a2226),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Completed deliveries will appear here.',
-                                    style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey.shade400),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : RefreshIndicator(
-                              onRefresh: _loadOrders,
-                              child: ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(
-                                    20, 0, 20, 100),
-                                itemCount: _orders.length,
-                                itemBuilder: (_, i) =>
-                                    _buildOrderCard(_orders[i]),
-                              ),
+                              ],
                             ),
-                ),
-              ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_orders.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          _buildSummaryChip(Icons.receipt_long_rounded,
+                              '${_orders.length} Completed'),
+                          const SizedBox(width: 10),
+                          _buildSummaryChip(Icons.trending_up_rounded,
+                              '\$${_orders.length * 2500}+ Earned'),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 14),
+                  Expanded(
+                    child: _loading
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                                color: Color(0xFF0a2226)))
+                        : _orders.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.receipt_long_outlined,
+                                        size: 56, color: Colors.grey.shade300),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No completed orders yet',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Completed deliveries will appear here.',
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade400),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : RefreshIndicator(
+                                onRefresh: _loadOrders,
+                                child: ListView.builder(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                                  itemCount: _orders.length,
+                                  itemBuilder: (_, i) =>
+                                      _buildOrderCard(_orders[i]),
+                                ),
+                              ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+        extendBody: true,
+        bottomNavigationBar: CustomBottomNav(
+          currentIndex: 1,
+          onTap: (index) {
+            if (index == 0) {
+              Navigator.pushNamedAndRemoveUntil(
+                  context, '/home', (route) => false);
+            } else if (index == 2) {
+              Navigator.pushReplacementNamed(context, '/load_board');
+            } else if (index == 3) {
+              Navigator.pushReplacementNamed(context, '/stats');
+            }
+          },
+        ),
       ),
     );
   }
@@ -348,13 +363,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: const Color(0xFF7A3FF2)),
+          Icon(icon, size: 14, color: const Color(0xFF2E3440)),
           const SizedBox(width: 6),
           Text(label,
               style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E1128))),
+                  color: Color(0xFF2E3440))),
         ],
       ),
     );

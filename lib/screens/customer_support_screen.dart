@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 import '../services/customer_support_service.dart';
 
 class CustomerSupportScreen extends StatefulWidget {
@@ -131,19 +131,19 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: Stack(
         children: [
           // Background gradient
           Container(
-            height: 350,
+            height: 220,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFFC07BFE),
-                  Color(0xFFF8F9FA),
+                  Color(0xFF0a2226),
+                  Color(0xFFFAFAFA),
                 ],
               ),
             ),
@@ -159,7 +159,7 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 15, vertical: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1128),
+                      color: const Color(0xFF0a2226),
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Row(
@@ -173,10 +173,10 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                           ),
                         ),
                         const SizedBox(width: 15),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Customer Support',
-                            style: TextStyle(
+                            style: GoogleFonts.outfit(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -249,9 +249,10 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(25),
+                      border: Border.all(color: const Color(0xFFE4E4E7)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: const Color(0xFF0a2226).withOpacity(0.02),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -282,23 +283,32 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: TextField(
-                          controller: _messageController,
-                          textInputAction: TextInputAction.send,
-                          onSubmitted: (_) => _sendMessage(),
-                          style: const TextStyle(color: Colors.black87),
-                          decoration: InputDecoration(
-                            hintText: 'Ask about loads, navigation...',
-                            hintStyle:
-                                const TextStyle(color: Colors.black38),
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide.none,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFE4E4E7)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0a2226).withOpacity(0.04),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: TextField(
+                            controller: _messageController,
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => _sendMessage(),
+                            style: GoogleFonts.inter(color: const Color(0xFF18181B), fontSize: 14),
+                            decoration: InputDecoration(
+                              hintText: 'Ask about loads, navigation...',
+                              hintStyle:
+                                  GoogleFonts.inter(color: const Color(0xFFA1A1AA)),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 17),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 17),
                           ),
                         ),
                       ),
@@ -309,8 +319,9 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                         child: ElevatedButton(
                           onPressed: _sending ? null : _sendMessage,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF8A30FA),
+                            backgroundColor: const Color(0xFF0a2226),
                             foregroundColor: Colors.white,
+                            elevation: 0,
                             padding: EdgeInsets.zero,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(18),
@@ -341,8 +352,8 @@ class _ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final alignment = isUser ? Alignment.centerRight : Alignment.centerLeft;
     final background =
-        isUser ? const Color(0xFF1E1128) : const Color(0xFFF4F1FF);
-    final foreground = isUser ? Colors.white : Colors.black87;
+        isUser ? const Color(0xFF0a2226) : const Color(0xFFF4F4F5);
+    final foreground = isUser ? Colors.white : const Color(0xFF18181B);
 
     return Container(
       alignment: alignment,
@@ -356,7 +367,7 @@ class _ChatBubble extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: TextStyle(color: foreground, height: 1.35),
+          style: GoogleFonts.inter(color: foreground, height: 1.35),
         ),
       ),
     );
@@ -374,12 +385,12 @@ class _TypingBubble extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF4F1FF),
+          color: const Color(0xFFF4F4F5),
           borderRadius: BorderRadius.circular(18),
         ),
-        child: const Text(
+        child: Text(
           'Typing...',
-          style: TextStyle(color: Colors.black54),
+          style: GoogleFonts.inter(color: const Color(0xFF71717A)),
         ),
       ),
     );
@@ -398,11 +409,12 @@ class _QuickChip extends StatelessWidget {
       onPressed: onTap,
       label: Text(label),
       backgroundColor: Colors.white,
-      labelStyle: const TextStyle(
+      labelStyle: GoogleFonts.inter(
         fontWeight: FontWeight.w600,
-        color: Colors.black87,
+        color: const Color(0xFF71717A),
+        fontSize: 13,
       ),
-      side: BorderSide(color: Colors.grey.shade300),
+      side: const BorderSide(color: Color(0xFFE4E4E7)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
     );
   }

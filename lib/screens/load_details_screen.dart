@@ -95,8 +95,7 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
 
   Future<void> _bookLoad() async {
     final user = _auth.currentUser;
-    final hasVehicleProfile =
-        user != null && _auth.hasVehicleProfile(user.id);
+    final hasVehicleProfile = user != null && _auth.hasVehicleProfile(user.id);
 
     if (!hasVehicleProfile) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -147,8 +146,7 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
           await Future.delayed(const Duration(seconds: 2));
           if (!mounted) return;
           Navigator.pop(context);
-          Navigator.pushNamedAndRemoveUntil(
-              context, '/home', (route) => false);
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         }
       }
     } catch (e) {
@@ -446,12 +444,18 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
         ],
       ),
       bottomNavigationBar: CustomBottomNav(
-        currentIndex: 2, // load details usually opened from load board
+        currentIndex: 2,
         onTap: (index) {
-          if (index == 0) Navigator.pushReplacementNamed(context, '/home');
-          if (index == 1) Navigator.pushNamed(context, '/order_history');
-          if (index == 2) Navigator.pop(context);
-          if (index == 3) Navigator.pushNamed(context, '/stats');
+          if (index == 0) {
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/home', (route) => false);
+          } else if (index == 1) {
+            Navigator.pushReplacementNamed(context, '/order_history');
+          } else if (index == 2) {
+            Navigator.pop(context);
+          } else if (index == 3) {
+            Navigator.pushReplacementNamed(context, '/stats');
+          }
         },
       ),
     );

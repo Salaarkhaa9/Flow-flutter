@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/api_client.dart';
 
@@ -22,245 +23,286 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _isLoading = false;
   String _error = '';
+  String? _firstNameError;
+  String? _lastNameError;
+  String? _emailError;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFB066FE),
-              Color(0xFF6A1B9A),
-              Colors.black,
-            ],
-          ),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 55),
-              Image.asset(
-                'assets/logo.png',
-                height: 70,
-                color: Colors.black,
-                colorBlendMode: BlendMode.srcIn,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'FLOW',
-                style: GoogleFonts.montserratAlternates(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.black,
-                  letterSpacing: 8,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Driver App',
-                style: GoogleFonts.poppins(
-                  color: Colors.black54,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(30),
-                decoration: const BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(40),
-                    topRight: Radius.circular(40),
+      backgroundColor: AppTheme.background,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // ── Top header section (slate-deep) ──────────────────────────
+            Container(
+              width: double.infinity,
+              color: AppTheme.slateDeep,
+              padding: const EdgeInsets.fromLTRB(30, 60, 30, 36),
+              child: Column(
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.limeVoltage.withOpacity(0.12),
+                    ),
+                    child: Center(
+                      child: Image.asset(
+                        'assets/logo.png',
+                        height: 40,
+                        color: AppTheme.limeVoltage,
+                        colorBlendMode: BlendMode.srcIn,
+                      ),
+                    ),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black54,
-                        blurRadius: 20,
-                        offset: Offset(0, -10))
+                  const SizedBox(height: 12),
+                  Text(
+                    'FLOW',
+                    style: GoogleFonts.outfit(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 6,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Driver Portal',
+                    style: GoogleFonts.inter(
+                      color: AppTheme.limeVoltage,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── White form section ────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.fromLTRB(28, 32, 28, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Create account',
+                    style: GoogleFonts.outfit(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.slateDeep,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Join the FLOW driver network',
+                    style: GoogleFonts.inter(
+                      color: AppTheme.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+
+                  // First Name
+                  _buildFieldLabel('First Name'),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                    controller: _firstNameController,
+                    hint: 'Enter your first name',
+                    icon: Icons.person_outline,
+                    errorText: _firstNameError,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Last Name
+                  _buildFieldLabel('Last Name'),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                    controller: _lastNameController,
+                    hint: 'Enter your last name',
+                    icon: Icons.person_outline,
+                    errorText: _lastNameError,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Email
+                  _buildFieldLabel('Email'),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                    controller: _emailController,
+                    hint: 'Enter your email address',
+                    icon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                    errorText: _emailError,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Password
+                  _buildFieldLabel('Password'),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                    controller: _passwordController,
+                    hint: 'Create a password (min. 8 chars)',
+                    icon: Icons.lock_outline,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Confirm Password
+                  _buildFieldLabel('Confirm Password'),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                    controller: _confirmPasswordController,
+                    hint: 'Re-enter your password',
+                    icon: Icons.lock_outline,
+                    obscureText: true,
+                  ),
+
+                  // Error banner
+                  if (_error.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline,
+                              color: Colors.red.shade600, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _error,
+                              style: TextStyle(
+                                  color: Colors.red.shade700, fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Text(
-                        'REGISTER',
-                        style: GoogleFonts.montserratAlternates(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    // First Name
-                    Text('First Name',
-                        style: GoogleFonts.poppins(color: Colors.white70)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _firstNameController,
-                      enabled: !_isLoading,
-                      decoration: InputDecoration(
-                        hintText: 'Enter first name...',
-                        hintStyle: const TextStyle(color: Colors.white24),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.06),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(height: 14),
-                    // Last Name
-                    Text('Last Name',
-                        style: GoogleFonts.poppins(color: Colors.white70)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _lastNameController,
-                      enabled: !_isLoading,
-                      decoration: InputDecoration(
-                        hintText: 'Enter last name...',
-                        hintStyle: const TextStyle(color: Colors.white24),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.06),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(height: 14),
-                    // Email
-                    Text('Email',
-                        style: GoogleFonts.poppins(color: Colors.white70)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _emailController,
-                      enabled: !_isLoading,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: 'Enter email address...',
-                        hintStyle: const TextStyle(color: Colors.white24),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.06),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(height: 14),
-                    // Password
-                    Text('Password',
-                        style: GoogleFonts.poppins(color: Colors.white70)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _passwordController,
-                      enabled: !_isLoading,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        hintText: 'Enter password...',
-                        hintStyle: const TextStyle(color: Colors.white24),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.06),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(height: 14),
-                    // Confirm Password
-                    Text('Confirm Password',
-                        style: GoogleFonts.poppins(color: Colors.white70)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _confirmPasswordController,
-                      enabled: !_isLoading,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        hintText: 'Confirm your password...',
-                        hintStyle: const TextStyle(color: Colors.white24),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.06),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(height: 12),
-                    if (_error.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          _error,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    if (_error.isNotEmpty) const SizedBox(height: 10),
-                    ElevatedButton(
+                  const SizedBox(height: 28),
+
+                  // Register button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
                       onPressed: _isLoading ? null : _handleRegister,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryPurple,
+                        backgroundColor: AppTheme.slateDeep,
                         foregroundColor: Colors.white,
-                        minimumSize: const Size(double.infinity, 60),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30)),
-                        elevation: 10,
-                        shadowColor: AppTheme.primaryPurple.withOpacity(0.5),
+                        shape: const StadiumBorder(),
+                        elevation: 0,
+                        disabledBackgroundColor: AppTheme.textMuted,
                       ),
                       child: _isLoading
                           ? const SizedBox(
-                              height: 24,
-                              width: 24,
+                              height: 22,
+                              width: 22,
                               child: CircularProgressIndicator(
                                 valueColor:
                                     AlwaysStoppedAnimation(Colors.white),
+                                strokeWidth: 2,
                               ),
                             )
                           : Text(
-                              'Register',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                              'Create Account',
+                              style: GoogleFonts.outfit(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700),
                             ),
                     ),
-                    const SizedBox(height: 14),
-                    Center(
-                      child: TextButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () => Navigator.pushReplacementNamed(
-                                context, '/login'),
-                        child: Text(
-                          'Already have an account? Login',
-                          style: GoogleFonts.poppins(
-                              color: Colors.white54, fontSize: 13),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Login link
+                  Center(
+                    child: TextButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () =>
+                              Navigator.pushReplacementNamed(context, '/login'),
+                      child: RichText(
+                        text: TextSpan(
+                          style: GoogleFonts.inter(
+                              color: AppTheme.textSecondary, fontSize: 14),
+                          children: [
+                            const TextSpan(text: 'Already have an account? '),
+                            TextSpan(
+                              text: 'Login',
+                              style: GoogleFonts.outfit(
+                                color: AppTheme.slateDeep,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFieldLabel(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.outfit(
+        color: AppTheme.slateDeep,
+        fontWeight: FontWeight.w600,
+        fontSize: 14,
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool obscureText = false,
+    TextInputType? keyboardType,
+    String? errorText,
+  }) {
+    return TextField(
+      controller: controller,
+      enabled: !_isLoading,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: GoogleFonts.inter(color: AppTheme.textPrimary, fontSize: 14),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 14),
+        errorText: errorText,
+        filled: true,
+        fillColor: AppTheme.surfaceMid,
+        prefixIcon: Icon(icon, color: AppTheme.textMuted, size: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppTheme.borderColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppTheme.borderColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              const BorderSide(color: AppTheme.slateDeep, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.red.shade300),
         ),
       ),
     );
@@ -268,17 +310,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     setState(() {
+      _firstNameError = null;
+      _lastNameError = null;
+      _emailError = null;
       _error = '';
       _isLoading = true;
     });
 
-    final firstName = _firstNameController.text.trim();
-    final lastName = _lastNameController.text.trim();
-    final email = _emailController.text.trim();
+    final rawFirstName = _firstNameController.text;
+    final rawLastName = _lastNameController.text;
+    final rawEmail = _emailController.text;
     final pwd = _passwordController.text.trim();
     final confirmPwd = _confirmPasswordController.text.trim();
 
-    if (firstName.isEmpty || email.isEmpty || pwd.isEmpty) {
+    bool hasValidationError = false;
+
+    // Check empty fields first
+    if (rawFirstName.trim().isEmpty) {
+      setState(() {
+        _firstNameError = 'First name is required';
+        hasValidationError = true;
+      });
+    }
+
+    if (rawEmail.trim().isEmpty) {
+      setState(() {
+        _emailError = 'Email is required';
+        hasValidationError = true;
+      });
+    }
+
+    // Name validation - alphabets only (no spaces, special chars, or integers)
+    final nameRegex = RegExp(r'^[a-zA-Z]+$');
+
+    if (rawFirstName.isNotEmpty && !nameRegex.hasMatch(rawFirstName)) {
+      setState(() {
+        _firstNameError = 'only alphabets are allowed';
+        hasValidationError = true;
+      });
+    }
+
+    if (rawLastName.isNotEmpty && !nameRegex.hasMatch(rawLastName)) {
+      setState(() {
+        _lastNameError = 'only alphabets are allowed';
+        hasValidationError = true;
+      });
+    }
+
+    // Email validation
+    if (rawEmail.isNotEmpty && !rawEmail.contains('@')) {
+      setState(() {
+        _emailError = '@ is not mentioned';
+        hasValidationError = true;
+      });
+    } else if (rawEmail.isNotEmpty && !rawEmail.contains('.')) {
+      setState(() {
+        _emailError = 'Please enter a valid email address';
+        hasValidationError = true;
+      });
+    }
+
+    if (pwd.isEmpty || confirmPwd.isEmpty) {
       setState(() {
         _error = 'Please fill all required fields';
         _isLoading = false;
@@ -286,9 +378,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    if (!email.contains('@') || !email.contains('.')) {
+    if (hasValidationError) {
       setState(() {
-        _error = 'Please enter a valid email address';
         _isLoading = false;
       });
       return;
@@ -312,20 +403,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final registered = await _authService.register(
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
+        firstName: rawFirstName.trim(),
+        lastName: rawLastName.trim(),
+        email: rawEmail.trim(),
         password: pwd,
       );
       if (registered) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('just_registered', true);
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Account created! Please login.'),
-              backgroundColor: Colors.teal,
+              content:  Text('Account created! Let\'s verify your identity.'),
+              backgroundColor: AppTheme.slateDeep,
             ),
           );
-          Navigator.pushReplacementNamed(context, '/login');
+          Navigator.pushReplacementNamed(
+            context,
+            '/id_upload',
+            arguments: rawEmail.trim(),
+          );
         }
       } else {
         setState(() {

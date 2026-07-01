@@ -76,7 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFFCE9FFC),
+                  Color(0xFF0a2226),
                   Colors.white,
                 ],
               ),
@@ -93,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E1128),
+                        color: const Color(0xFF0a2226),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Row(
@@ -105,11 +105,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(width: 15),
                           const Expanded(
                             child: Text(
-                              'Manage Profile',
+                              'Personal Profile',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                fontSize: 15,
                               ),
                             ),
                           ),
@@ -139,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               CircleAvatar(
                                 radius: 50,
-                                backgroundColor: const Color(0xFFC07BFE),
+                                backgroundColor: const Color(0xFF0a2226),
                                 child: Text(
                                   _firstNameController.text.isNotEmpty
                                       ? _firstNameController.text[0].toUpperCase()
@@ -184,8 +184,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: ElevatedButton(
                             onPressed: _isSaving ? null : _saveProfile,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.teal,
-                              foregroundColor: Colors.white,
+                              backgroundColor: const Color(0xFFd6ff00),
+                              foregroundColor: Colors.black,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                               disabledBackgroundColor: Colors.teal.shade300,
                             ),

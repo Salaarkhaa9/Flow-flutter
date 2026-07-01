@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ── Model ─────────────────────────────────────────────────────────────────────
 class _AppDestination {
@@ -113,17 +114,17 @@ class _SearchScreenState extends State<SearchScreen> {
     final bool hasQuery = _controller.text.trim().isNotEmpty;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFAFAFA),
       body: Stack(
         children: [
-          // ── Purple gradient header ──────────────────────────────────────
+          // ── Slate deep gradient header ──────────────────────────────────
           Container(
-            height: 350,
+            height: 220,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFFCE9FFC), Color(0xFFF8F9FA)],
+                colors: [Color(0xFF0a2226), Color(0xFFFAFAFA)],
               ),
             ),
           ),
@@ -151,7 +152,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
+                                color: const Color(0xFF0a2226).withOpacity(0.08),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -160,9 +161,9 @@ class _SearchScreenState extends State<SearchScreen> {
                           child: TextField(
                             controller: _controller,
                             autofocus: true,
-                            style: const TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 14,
-                              color: Colors.black87,
+                              color: const Color(0xFF18181B),
                               fontWeight: FontWeight.w500,
                             ),
                             decoration: InputDecoration(
@@ -202,10 +203,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         // Section label
                         Text(
                           hasQuery ? 'Results' : 'Quick Actions',
-                          style: const TextStyle(
+                          style: GoogleFonts.outfit(
                             fontSize: 17,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF1E1128),
+                            color: const Color(0xFF0a2226),
                           ),
                         ),
                         const SizedBox(height: 14),
@@ -213,7 +214,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         if (_results.isEmpty)
                           _buildEmpty()
                         else if (!hasQuery)
-                          // Chip grid (mockup style)
+                          // Chip grid
                           _buildChipGrid()
                         else
                           // Detailed list for search results
@@ -266,7 +267,7 @@ class _SearchScreenState extends State<SearchScreen> {
             const SizedBox(height: 16),
             Text(
               'No results found',
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey.shade400,
@@ -301,10 +302,10 @@ class _QuickChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: const Color(0xFFE5E5E5)),
+          border: Border.all(color: const Color(0xFFE4E4E7)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: const Color(0xFF0a2226).withOpacity(0.03),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -313,14 +314,14 @@ class _QuickChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 15, color: const Color(0xFF7A3FF2)),
+            Icon(icon, size: 15, color: const Color(0xFF0a2226)),
             const SizedBox(width: 6),
             Text(
               label,
-              style: const TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1E1128),
+                color: const Color(0xFF0a2226),
               ),
             ),
           ],
@@ -348,10 +349,10 @@ class _ResultTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFEFEBFF)),
+          border: Border.all(color: const Color(0xFFE4E4E7)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: const Color(0xFF0a2226).withOpacity(0.03),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -362,11 +363,11 @@ class _ResultTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF8E5AF7).withOpacity(0.10),
+                color: const Color(0xFF0a2226).withOpacity(0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(dest.icon,
-                  size: 20, color: const Color(0xFF7A3FF2)),
+                  size: 20, color: const Color(0xFF0a2226)),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -375,18 +376,18 @@ class _ResultTile extends StatelessWidget {
                 children: [
                   Text(
                     dest.title,
-                    style: const TextStyle(
+                    style: GoogleFonts.outfit(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1E1128),
+                      color: const Color(0xFF0a2226),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     dest.subtitle,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: Colors.grey.shade500,
+                      color: const Color(0xFF71717A),
                       fontWeight: FontWeight.w500,
                     ),
                   ),

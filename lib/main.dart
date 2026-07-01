@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'screens/intro_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/id_upload_screen.dart';
+import 'screens/cdl_upload_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/shipment_detail_screen.dart';
 import 'screens/load_board_screen.dart';
@@ -15,6 +17,7 @@ import 'screens/stats_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/notification_screen.dart';
 import 'screens/tasks_screen.dart';
+import 'screens/business_profile_screen.dart';
 import 'services/notification_service.dart';
 import 'models/load.dart';
 import 'models/shipment.dart';
@@ -42,13 +45,23 @@ class FlowApp extends StatelessWidget {
     return MaterialApp(
       title: 'FLOW',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       // Skip the intro/login flow if the driver is already authenticated.
       initialRoute: startLoggedIn ? '/home' : '/',
       routes: {
         '/': (context) => const IntroScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/id_upload': (context) {
+          final email =
+              ModalRoute.of(context)?.settings.arguments as String? ?? '';
+          return IdUploadScreen(userEmail: email);
+        },
+        '/cdl_upload': (context) {
+          final email =
+              ModalRoute.of(context)?.settings.arguments as String? ?? '';
+          return CdlUploadScreen(userEmail: email);
+        },
         '/home': (context) => const HomeScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/load_board': (context) => const LoadBoardScreen(),
@@ -74,6 +87,7 @@ class FlowApp extends StatelessWidget {
         '/notifications': (context) => const NotificationScreen(),
         '/order_history': (context) => const OrderHistoryScreen(),
         '/tasks': (context) => const TasksScreen(),
+        '/business_profile': (context) => const BusinessProfileScreen(),
       },
     );
   }

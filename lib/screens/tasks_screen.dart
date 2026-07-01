@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/task.dart';
 import '../services/task_service.dart';
 
@@ -79,13 +80,13 @@ class _TasksScreenState extends State<TasksScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Task?',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('Delete "${task.title}"?'),
+        title: Text('Delete Task?',
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF0a2226))),
+        content: Text('Delete "${task.title}"?', style: GoogleFonts.inter(color: const Color(0xFF71717A))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF71717A))),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -95,7 +96,7 @@ class _TasksScreenState extends State<TasksScreen> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Delete'),
+            child: Text('Delete', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -120,27 +121,28 @@ class _TasksScreenState extends State<TasksScreen> {
       controller: controller,
       maxLines: maxLines,
       validator: validator,
-      style: const TextStyle(color: Colors.black87, fontSize: 14),
+      style: GoogleFonts.inter(color: const Color(0xFF18181B), fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(
-          color: Colors.grey.shade500,
+        labelStyle: GoogleFonts.inter(
+          color: const Color(0xFF71717A),
           fontWeight: FontWeight.w600,
           fontSize: 13,
         ),
+        hintStyle: const TextStyle(color: Color(0xFFA1A1AA)),
         filled: true,
-        fillColor: const Color(0xFFF7F6FB),
+        fillColor: const Color(0xFFF4F4F5),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
+          borderSide: const BorderSide(color: Color(0xFFE4E4E7)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
+          borderSide: const BorderSide(color: Color(0xFFE4E4E7)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF8E5AF7), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFF0a2226), width: 1.5),
         ),
       ),
     );
@@ -157,8 +159,8 @@ class _TasksScreenState extends State<TasksScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: task.isCompleted
-              ? const Color(0xFF8E5AF7).withOpacity(0.3)
-              : Colors.grey.shade200,
+              ? const Color(0xFF0a2226).withOpacity(0.15)
+              : const Color(0xFFE4E4E7),
         ),
       ),
       child: Row(
@@ -172,12 +174,12 @@ class _TasksScreenState extends State<TasksScreen> {
               margin: const EdgeInsets.only(top: 2),
               decoration: BoxDecoration(
                 color: task.isCompleted
-                    ? const Color(0xFF8E5AF7)
+                    ? const Color(0xFF0a2226)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: task.isCompleted
-                      ? const Color(0xFF8E5AF7)
+                      ? const Color(0xFF0a2226)
                       : Colors.grey.shade400,
                   width: 2,
                 ),
@@ -194,12 +196,12 @@ class _TasksScreenState extends State<TasksScreen> {
               children: [
                 Text(
                   task.title,
-                  style: TextStyle(
+                  style: GoogleFonts.outfit(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: task.isCompleted
-                        ? Colors.black38
-                        : const Color(0xFF1E1128),
+                        ? Colors.black26
+                        : const Color(0xFF0a2226),
                     decoration: task.isCompleted
                         ? TextDecoration.lineThrough
                         : null,
@@ -211,11 +213,11 @@ class _TasksScreenState extends State<TasksScreen> {
                     task.notes,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 13,
                       color: task.isCompleted
                           ? Colors.black26
-                          : Colors.black54,
+                          : const Color(0xFF71717A),
                     ),
                   ),
                 ],
@@ -226,15 +228,15 @@ class _TasksScreenState extends State<TasksScreen> {
                         size: 12,
                         color: task.isCompleted
                             ? Colors.black26
-                            : Colors.grey.shade400),
+                            : const Color(0xFF71717A)),
                     const SizedBox(width: 4),
                     Text(
                       dateFormat.format(task.createdAt),
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 11,
                         color: task.isCompleted
                             ? Colors.black26
-                            : Colors.grey.shade400,
+                            : const Color(0xFF71717A),
                       ),
                     ),
                   ],
@@ -259,16 +261,16 @@ class _TasksScreenState extends State<TasksScreen> {
     final completedCount = _tasks.where((t) => t.isCompleted).length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: Stack(
         children: [
           Container(
-            height: 200,
+            height: 220,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFFCE9FFC), Color(0xFFF8F9FA)],
+                colors: [Color(0xFF0a2226), Color(0xFFFAFAFA)],
               ),
             ),
           ),
@@ -282,7 +284,7 @@ class _TasksScreenState extends State<TasksScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 15, vertical: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1128),
+                      color: const Color(0xFF0a2226),
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Row(
@@ -293,10 +295,10 @@ class _TasksScreenState extends State<TasksScreen> {
                               color: Colors.white, size: 20),
                         ),
                         const SizedBox(width: 15),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Tasks',
-                            style: TextStyle(
+                            style: GoogleFonts.outfit(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -308,13 +310,13 @@ class _TasksScreenState extends State<TasksScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF7A3FF2),
+                              color: const Color(0xFFd6ff00),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               '$completedCount/${_tasks.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF0a2226),
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -339,13 +341,13 @@ class _TasksScreenState extends State<TasksScreen> {
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.06),
+                                color: const Color(0xFF0a2226).withOpacity(0.04),
                                 blurRadius: 18,
                                 offset: const Offset(0, 8),
                               ),
                             ],
                             border: Border.all(
-                                color: const Color(0xFFE8E1FF)),
+                                color: const Color(0xFFE4E4E7)),
                           ),
                           child: Form(
                             key: _formKey,
@@ -358,32 +360,33 @@ class _TasksScreenState extends State<TasksScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF8E5AF7)
-                                            .withOpacity(0.12),
+                                        color: const Color(0xFF0a2226)
+                                            .withOpacity(0.08),
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Icon(
                                           Icons.task_alt_rounded,
-                                          color: Color(0xFF7A3FF2)),
+                                          color: Color(0xFF0a2226)),
                                     ),
                                     const SizedBox(width: 12),
-                                    const Expanded(
+                                    Expanded(
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Add Task',
-                                            style: TextStyle(
+                                            style: GoogleFonts.outfit(
                                                 fontSize: 18,
                                                 fontWeight:
-                                                    FontWeight.w800),
+                                                    FontWeight.w800,
+                                                color: const Color(0xFF0a2226)),
                                           ),
-                                          SizedBox(height: 3),
+                                          const SizedBox(height: 3),
                                           Text(
                                             'Jot down a quick note or to-do.',
-                                            style: TextStyle(
-                                                color: Colors.black54,
+                                            style: GoogleFonts.inter(
+                                                color: const Color(0xFF71717A),
                                                 fontSize: 12),
                                           ),
                                         ],
@@ -409,16 +412,15 @@ class _TasksScreenState extends State<TasksScreen> {
                                 const SizedBox(height: 18),
                                 SizedBox(
                                   width: double.infinity,
-                                  height: 48,
+                                  height: 50,
                                   child: ElevatedButton(
                                     onPressed: _saving ? null : _addTask,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor:
-                                          const Color(0xFF8E5AF7),
+                                          const Color(0xFF0a2226),
                                       foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(14)),
+                                      shape: const StadiumBorder(),
+                                      elevation: 0,
                                     ),
                                     child: _saving
                                         ? const SizedBox(
@@ -430,79 +432,80 @@ class _TasksScreenState extends State<TasksScreen> {
                                               strokeWidth: 2,
                                             ),
                                           )
-                                        : const Text('Add Task',
-                                            style: TextStyle(
+                                        : Text('Add Task',
+                                            style: GoogleFonts.outfit(
                                                 fontWeight:
-                                                    FontWeight.w700)),
+                                                    FontWeight.w800,
+                                                fontSize: 15)),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Your Tasks',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        if (_loading)
-                          const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(20.0),
-                              child: CircularProgressIndicator(
-                                  color: Colors.black),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Your Tasks',
+                            style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF0a2226),
                             ),
                           ),
-                        if (!_loading && _tasks.isEmpty)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                  color: Colors.grey.shade200),
+                          const SizedBox(height: 12),
+                          if (_loading)
+                            const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(20.0),
+                                child: CircularProgressIndicator(
+                                    color: Color(0xFF0a2226)),
+                              ),
                             ),
-                            child: const Column(
-                              children: [
-                                Icon(Icons.task_alt_outlined,
-                                    size: 40, color: Colors.black38),
-                                SizedBox(height: 8),
-                                Text(
-                                  'No tasks yet',
-                                  style: TextStyle(
-                                    color: Colors.black54,
-                                    fontWeight: FontWeight.w600,
+                          if (!_loading && _tasks.isEmpty)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                    color: const Color(0xFFE4E4E7)),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.task_alt_outlined,
+                                      size: 40, color: Color(0xFF71717A)),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'No tasks yet',
+                                    style: GoogleFonts.inter(
+                                      color: const Color(0xFF71717A),
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Add your first task above.',
-                                  style: TextStyle(
-                                    color: Colors.black38,
-                                    fontSize: 12,
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Add your first task above.',
+                                    style: GoogleFonts.inter(
+                                      color: const Color(0xFFA1A1AA),
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        if (!_loading && _tasks.isNotEmpty)
-                          ..._tasks.map((t) => _buildTaskItem(t)),
-                        const SizedBox(height: 40),
-                      ],
+                          if (!_loading && _tasks.isNotEmpty)
+                            ..._tasks.map((t) => _buildTaskItem(t)),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
     );
   }
 

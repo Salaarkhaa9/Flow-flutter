@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../models/vehicle_profile.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class VehicleRegistrationScreen extends StatefulWidget {
   final bool isEditing;
@@ -31,7 +32,8 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   final TextEditingController _trailerLengthController =
       TextEditingController();
   final TextEditingController _trailerWidthController = TextEditingController();
-  final TextEditingController _trailerHeightController = TextEditingController();
+  final TextEditingController _trailerHeightController =
+      TextEditingController();
   final TextEditingController _maxWeightController = TextEditingController();
   final TextEditingController _internalFleetIdController =
       TextEditingController();
@@ -453,19 +455,20 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: selected
-              ? const Color(0xFF8E5AF7).withOpacity(0.12)
-              : Colors.white,
-          foregroundColor: const Color(0xFF1E1128),
+          backgroundColor:
+              selected ? const Color(0xFF0a2226) : const Color(0xFFF4F4F5),
+          foregroundColor: selected ? Colors.white : const Color(0xFF71717A),
           side: BorderSide(
-              color: selected ? const Color(0xFF8E5AF7) : Colors.grey.shade300),
+              color:
+                  selected ? const Color(0xFF0a2226) : const Color(0xFFE4E4E7)),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 0,
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? const Color(0xFF7A3FF2) : Colors.black87,
+            color: selected ? Colors.white : const Color(0xFF71717A),
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -491,13 +494,14 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.teal,
+          backgroundColor: const Color(0xFF0a2226),
           foregroundColor: Colors.white,
-          disabledBackgroundColor: Colors.teal.shade300,
+          disabledBackgroundColor: const Color(0xFF0a2226).withOpacity(0.6),
           disabledForegroundColor: Colors.white70,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 16),
+          elevation: 0,
         ),
       ),
     );
@@ -515,29 +519,29 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       child: TextFormField(
         controller: controller,
         validator: validator,
-        style: const TextStyle(color: Colors.black87, fontSize: 14),
+        style: const TextStyle(color: Color(0xFF18181B), fontSize: 14),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(
-            color: Colors.grey.shade500,
+          labelStyle: const TextStyle(
+            color: Color(0xFF71717A),
             fontWeight: FontWeight.w600,
             fontSize: 13,
           ),
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+          hintStyle: const TextStyle(color: Color(0xFFA1A1AA), fontSize: 14),
           filled: true,
-          fillColor: const Color(0xFFF7F6FB),
+          fillColor: const Color(0xFFF4F4F5),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+            borderSide: const BorderSide(color: Color(0xFFE4E4E7)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+            borderSide: const BorderSide(color: Color(0xFFE4E4E7)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF8E5AF7), width: 1.5),
+            borderSide: const BorderSide(color: Color(0xFF0a2226), width: 1.5),
           ),
         ),
       ),
@@ -554,12 +558,10 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: value
-              ? const Color(0xFF8E5AF7).withOpacity(0.12)
-              : const Color(0xFFF7F6FB),
+          color: value ? const Color(0xFF0a2226) : const Color(0xFFF4F4F5),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: value ? const Color(0xFF8E5AF7) : Colors.grey.shade200,
+            color: const Color(0xFFE4E4E7),
           ),
         ),
         child: Row(
@@ -567,14 +569,14 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
           children: [
             Icon(
               value ? Icons.check_box : Icons.check_box_outline_blank,
-              color: value ? const Color(0xFF7A3FF2) : Colors.grey,
+              color: value ? Colors.white : const Color(0xFF71717A),
               size: 18,
             ),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
-                color: value ? const Color(0xFF7A3FF2) : Colors.black54,
+                color: value ? Colors.white : const Color(0xFF71717A),
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -614,16 +616,19 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F6FB),
+        color: const Color(0xFF0a2226).withOpacity(0.04),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: const Color(0xFFE4E4E7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: Color(0xFF0a2226)),
           ),
           const SizedBox(height: 10),
           Row(
@@ -650,11 +655,12 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFFF4F4F5),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color:
-                      hasFile ? const Color(0xFF8E5AF7) : Colors.grey.shade300,
+                  color: hasFile
+                      ? const Color(0xFF0a2226).withOpacity(0.4)
+                      : const Color(0xFFE4E4E7),
                   width: hasFile ? 1.5 : 1,
                 ),
               ),
@@ -667,8 +673,8 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                             ? Icons.image_outlined
                             : Icons.picture_as_pdf_outlined),
                     color: hasFile
-                        ? const Color(0xFF8E5AF7)
-                        : Colors.grey.shade600,
+                        ? const Color(0xFF0a2226)
+                        : const Color(0xFF71717A),
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -679,8 +685,8 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                           : 'Upload ${documentType.toLowerCase()} from device',
                       style: TextStyle(
                         color: hasFile
-                            ? const Color(0xFF1E1128)
-                            : Colors.grey.shade600,
+                            ? const Color(0xFF18181B)
+                            : const Color(0xFF71717A),
                         fontWeight: hasFile ? FontWeight.w600 : FontWeight.w400,
                         fontSize: 13,
                       ),
@@ -690,7 +696,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                   ),
                   const Icon(
                     Icons.upload_file,
-                    color: Color(0xFF8E5AF7),
+                    color: Color(0xFF0a2226),
                     size: 18,
                   ),
                 ],
@@ -737,53 +743,494 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     );
   }
 
+  Widget _buildProgressBar({required int step, required int total}) {
+    return Row(
+      children: List.generate(total, (i) {
+        final active = i < step;
+        return Expanded(
+          child: Container(
+            margin: EdgeInsets.only(right: i < total - 1 ? 6 : 0),
+            height: 4,
+            decoration: BoxDecoration(
+              color: active ? Colors.white : Colors.white.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: Stack(
-        children: [
-          Container(
-            height: 200,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFCE9FFC),
-                  Color(0xFFF8F9FA),
-                ],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: const Color(0xFF0a2226),
+        child: Column(
+          children: [
+            // ── Header ────────────────────────────────────────────────────
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                child: Column(
+                  children: [
+                    if (!widget.isEditing) ...[
+                      _buildProgressBar(step: 3, total: 3),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Step 3 of 3 — Vehicle Registration',
+                              style: GoogleFonts.inter(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    Center(
+                      child: Text(
+                        widget.isEditing
+                            ? 'Vehicle Management'
+                            : 'Vehicle Registration',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (!widget.isEditing) ...[
+                      Text(
+                        'Register your vehicle details to start accepting loads',
+                        style: GoogleFonts.inter(
+                          color: Colors.white60,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            Expanded(
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Form(
+                  key: _vehicleFormKey,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 15, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E1128),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.arrow_back,
-                              color: Colors.white, size: 20),
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(32),
+                        topRight: Radius.circular(32),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 20,
+                          offset: Offset(0, -6),
                         ),
-                        const SizedBox(width: 15),
-                        const Expanded(
-                          child: Text(
-                            'Vehicle Management',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color:
+                                    const Color(0xFF0a2226).withOpacity(0.08),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.local_shipping_outlined,
+                                  color: Color(0xFF0a2226)),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Vehicle Details',
+                                    style: GoogleFonts.outfit(
+                                        color: const Color(0xFF0a2226),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    'Enter your VIN and tap Lookup to auto-fill details.',
+                                    style: GoogleFonts.inter(
+                                        color: const Color(0xFF71717A),
+                                        fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        // VIN lookup row (always visible)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: _buildVehicleField(
+                                'VIN Number',
+                                _vinController,
+                                validator: (value) =>
+                                    value == null || value.trim().isEmpty
+                                        ? 'Required'
+                                        : null,
+                                width: double.infinity,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            _buildVinLookupButton(),
+                          ],
+                        ),
+                        if (_showAllFields) ...[
+                          const SizedBox(height: 18),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              SizedBox(
+                                width: 145,
+                                child: DropdownButtonFormField<String>(
+                                  isExpanded: true,
+                                  value: _equipmentType,
+                                  hint: const Text(
+                                    'Not Selected',
+                                    style: TextStyle(
+                                        color: Color(0xFFA1A1AA), fontSize: 14),
+                                  ),
+                                  dropdownColor: Colors.white,
+                                  style: const TextStyle(
+                                      color: Color(0xFF18181B),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400),
+                                  decoration: InputDecoration(
+                                    labelText: 'Equipment Type',
+                                    labelStyle: const TextStyle(
+                                      color: Color(0xFF71717A),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                    filled: true,
+                                    fillColor: const Color(0xFFF4F4F5),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                          color: Color(0xFFE4E4E7)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                          color: Color(0xFFE4E4E7)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                          color: Color(0xFF0a2226), width: 1.5),
+                                    ),
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                        value: 'Flatbed',
+                                        child: Text('Flatbed',
+                                            style: TextStyle(
+                                                color: Color(0xFF18181B),
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w400))),
+                                    DropdownMenuItem(
+                                        value: 'Dry Van',
+                                        child: Text('Dry Van',
+                                            style: TextStyle(
+                                                color: Color(0xFF18181B),
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w400))),
+                                    DropdownMenuItem(
+                                        value: 'Reefer',
+                                        child: Text('Reefer',
+                                            style: TextStyle(
+                                                color: Color(0xFF18181B),
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w400))),
+                                    DropdownMenuItem(
+                                        value: 'Step Deck',
+                                        child: Text('Step Deck',
+                                            style: TextStyle(
+                                                color: Color(0xFF18181B),
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w400))),
+                                    DropdownMenuItem(
+                                        value: 'Other',
+                                        child: Text('Other',
+                                            style: TextStyle(
+                                                color: Color(0xFF18181B),
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w400))),
+                                  ],
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Required';
+                                    }
+                                    return null;
+                                  },
+                                  onChanged: (value) {
+                                    setState(() => _equipmentType = value);
+                                  },
+                                ),
+                              ),
+                              _buildVehicleField(
+                                'License Plate',
+                                _licensePlateController,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Required';
+                                  }
+                                  if (!RegExp(r'^[a-zA-Z0-9]+$')
+                                      .hasMatch(value.trim())) {
+                                    return 'Alphanumeric only';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              _buildVehicleField(
+                                'Year',
+                                _yearController,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              _buildVehicleField(
+                                'Make',
+                                _makeController,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              _buildVehicleField(
+                                'Model',
+                                _modelController,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              _buildVehicleField(
+                                'Max Weight (lbs)',
+                                _maxWeightController,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Required';
+                                  }
+                                  if (!RegExp(r'^\d{1,7}$')
+                                      .hasMatch(value.trim())) {
+                                    return 'Invalid Weight';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              _buildVehicleField(
+                                'Trailer Length (ft)',
+                                _trailerLengthController,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Required';
+                                  }
+                                  if (!RegExp(r'^\d{1,4}$')
+                                      .hasMatch(value.trim())) {
+                                    return 'Invalid Length';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              _buildVehicleField(
+                                'Trailer Width (ft)',
+                                _trailerWidthController,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Required';
+                                  }
+                                  if (!RegExp(r'^\d{1,3}$')
+                                      .hasMatch(value.trim())) {
+                                    return 'Invalid width';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              _buildVehicleField(
+                                'Trailer Height (ft)',
+                                _trailerHeightController,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Required';
+                                  }
+                                  if (!RegExp(r'^\d{1,3}$')
+                                      .hasMatch(value.trim())) {
+                                    return 'Invalid height';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildToggleChip(
+                                  label: 'Liftgate',
+                                  value: _hasLiftgate,
+                                  onChanged: (v) =>
+                                      setState(() => _hasLiftgate = v),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildToggleChip(
+                                  label: 'Hazmat Certified',
+                                  value: _isHazmatCertified,
+                                  onChanged: (v) =>
+                                      setState(() => _isHazmatCertified = v),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 18),
+                        Text(
+                          'Documents',
+                          style: GoogleFonts.outfit(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF0a2226)),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Vehicle registration and insurance can be added as either an image or a PDF.',
+                          style: GoogleFonts.inter(
+                              color: const Color(0xFF71717A), fontSize: 12),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDocumentSection(
+                          title: 'Vehicle Registration',
+                          controller: _registrationDocumentController,
+                          documentType: _registrationDocumentType,
+                          isRegistration: true,
+                        ),
+                        const SizedBox(height: 14),
+                        _buildDocumentSection(
+                          title: 'Insurance Certificate',
+                          controller: _insuranceDocumentController,
+                          documentType: _insuranceDocumentType,
+                          isRegistration: false,
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: _resetForm,
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF71717A),
+                                  side: const BorderSide(
+                                      color: Color(0xFFE4E4E7)),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
+                                  shape: const StadiumBorder(),
+                                  elevation: 0,
+                                ),
+                                child: const Text('Reset'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _isLoading
+                                    ? null
+                                    : _saveVehicleRegistration,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF0a2226),
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
+                                  shape: const StadiumBorder(),
+                                  elevation: 0,
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text('Save Vehicle'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Center(
+                          child: TextButton(
+                            onPressed: _isLoading
+                                ? null
+                                : () {
+                                    if (AuthService().isLoggedIn()) {
+                                      Navigator.pushNamedAndRemoveUntil(
+                                        context,
+                                        '/home',
+                                        (route) => false,
+                                      );
+                                    } else {
+                                      Navigator.pushNamedAndRemoveUntil(
+                                        context,
+                                        '/login',
+                                        (route) => false,
+                                      );
+                                    }
+                                  },
+                            child: Text(
+                              'Skip for now — Complete Verification later',
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF71717A),
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         ),
@@ -791,386 +1238,10 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                     ),
                   ),
                 ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                    child: Form(
-                      key: _vehicleFormKey,
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 18,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                          border: Border.all(color: const Color(0xFFE8E1FF)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF8E5AF7)
-                                        .withOpacity(0.12),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                      Icons.local_shipping_outlined,
-                                      color: Color(0xFF7A3FF2)),
-                                ),
-                                const SizedBox(width: 12),
-                                const Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Vehicle Registration',
-                                        style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w800),
-                                      ),
-                                      SizedBox(height: 3),
-                                      Text(
-                                        'Enter your VIN and tap Lookup to auto-fill details.',
-                                        style: TextStyle(
-                                            color: Colors.black54,
-                                            fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 18),
-                            // VIN lookup row (always visible)
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Expanded(
-                                  child: _buildVehicleField(
-                                    'VIN Number',
-                                    _vinController,
-                                    validator: (value) =>
-                                        value == null || value.trim().isEmpty
-                                            ? 'Required'
-                                            : null,
-                                    width: double.infinity,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                _buildVinLookupButton(),
-                              ],
-                            ),
-                            if (_showAllFields) ...[
-                              const SizedBox(height: 18),
-                              Wrap(
-                                spacing: 12,
-                                runSpacing: 12,
-                                children: [
-                                  SizedBox(
-                                    width: 145,
-                                    child: DropdownButtonFormField<String>(
-                                      isExpanded: true,
-                                      value: _equipmentType,
-                                      hint: const Text(
-                                        'Not Selected',
-                                        style: TextStyle(
-                                            color: Colors.grey, fontSize: 14),
-                                      ),
-                                      dropdownColor: Colors.white,
-                                      style: const TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400),
-                                      decoration: InputDecoration(
-                                        labelText: 'Equipment Type',
-                                        labelStyle: TextStyle(
-                                          color: Colors.grey.shade500,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13,
-                                        ),
-                                        filled: true,
-                                        fillColor: const Color(0xFFF7F6FB),
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          borderSide: BorderSide(
-                                              color: Colors.grey.shade200),
-                                        ),
-                                      ),
-                                      items: const [
-                                        DropdownMenuItem(
-                                            value: 'Flatbed',
-                                            child: Text('Flatbed',
-                                                style: TextStyle(
-                                                    color: Colors.black87,
-                                                    fontSize: 14,
-                                                    fontWeight:
-                                                        FontWeight.w400))),
-                                        DropdownMenuItem(
-                                            value: 'Dry Van',
-                                            child: Text('Dry Van',
-                                                style: TextStyle(
-                                                    color: Colors.black87,
-                                                    fontSize: 14,
-                                                    fontWeight:
-                                                        FontWeight.w400))),
-                                        DropdownMenuItem(
-                                            value: 'Reefer',
-                                            child: Text('Reefer',
-                                                style: TextStyle(
-                                                    color: Colors.black87,
-                                                    fontSize: 14,
-                                                    fontWeight:
-                                                        FontWeight.w400))),
-                                        DropdownMenuItem(
-                                            value: 'Step Deck',
-                                            child: Text('Step Deck',
-                                                style: TextStyle(
-                                                    color: Colors.black87,
-                                                    fontSize: 14,
-                                                    fontWeight:
-                                                        FontWeight.w400))),
-                                        DropdownMenuItem(
-                                            value: 'Other',
-                                            child: Text('Other',
-                                                style: TextStyle(
-                                                    color: Colors.black87,
-                                                    fontSize: 14,
-                                                    fontWeight:
-                                                        FontWeight.w400))),
-                                      ],
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return 'Required';
-                                        }
-                                        return null;
-                                      },
-                                      onChanged: (value) {
-                                        setState(() => _equipmentType = value);
-                                      },
-                                    ),
-                                  ),
-                                  _buildVehicleField(
-                                    'License Plate',
-                                    _licensePlateController,
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Required';
-                                      }
-                                      if (!RegExp(r'^[a-zA-Z0-9]+$')
-                                          .hasMatch(value.trim())) {
-                                        return 'Alphanumeric only';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  _buildVehicleField(
-                                    'Year',
-                                    _yearController,
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Required';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  _buildVehicleField(
-                                    'Make',
-                                    _makeController,
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Required';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  _buildVehicleField(
-                                    'Model',
-                                    _modelController,
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Required';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  _buildVehicleField(
-                                    'Max Weight (lbs)',
-                                    _maxWeightController,
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Required';
-                                      }
-                                      if (!RegExp(r'^\d{1,7}$')
-                                          .hasMatch(value.trim())) {
-                                        return 'Invalid Weight';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  _buildVehicleField(
-                                    'Trailer Length (ft)',
-                                    _trailerLengthController,
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Required';
-                                      }
-                                      if (!RegExp(r'^\d{1,4}$')
-                                          .hasMatch(value.trim())) {
-                                        return 'Invalid Length';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  _buildVehicleField(
-                                    'Trailer Width (ft)',
-                                    _trailerWidthController,
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Required';
-                                      }
-                                      if (!RegExp(r'^\d{1,3}$')
-                                          .hasMatch(value.trim())) {
-                                        return 'Invalid width';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  _buildVehicleField(
-                                    'Trailer Height (ft)',
-                                    _trailerHeightController,
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Required';
-                                      }
-                                      if (!RegExp(r'^\d{1,3}$')
-                                          .hasMatch(value.trim())) {
-                                        return 'Invalid height';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 14),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildToggleChip(
-                                      label: 'Liftgate',
-                                      value: _hasLiftgate,
-                                      onChanged: (v) =>
-                                          setState(() => _hasLiftgate = v),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _buildToggleChip(
-                                      label: 'Hazmat Certified',
-                                      value: _isHazmatCertified,
-                                      onChanged: (v) => setState(
-                                          () => _isHazmatCertified = v),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                            const SizedBox(height: 18),
-                            const Text(
-                              'Documents',
-                              style: TextStyle(
-                                  fontSize: 15, fontWeight: FontWeight.w800),
-                            ),
-                            const SizedBox(height: 10),
-                            const Text(
-                              'Vehicle registration and insurance can be added as either an image or a PDF.',
-                              style: TextStyle(
-                                  color: Colors.black54, fontSize: 12),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildDocumentSection(
-                              title: 'Vehicle Registration',
-                              controller: _registrationDocumentController,
-                              documentType: _registrationDocumentType,
-                              isRegistration: true,
-                            ),
-                            const SizedBox(height: 14),
-                            _buildDocumentSection(
-                              title: 'Insurance Certificate',
-                              controller: _insuranceDocumentController,
-                              documentType: _insuranceDocumentType,
-                              isRegistration: false,
-                            ),
-                            const SizedBox(height: 18),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: _resetForm,
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: const Color(0xFF1E1128),
-                                      side: BorderSide(
-                                          color: Colors.grey.shade300),
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 14),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(14)),
-                                    ),
-                                    child: const Text('Reset'),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: _isLoading
-                                        ? null
-                                        : _saveVehicleRegistration,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF8E5AF7),
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 14),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(14)),
-                                    ),
-                                    child: _isLoading
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : const Text('Save Vehicle'),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

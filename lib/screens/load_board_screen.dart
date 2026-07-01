@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../models/load.dart';
 import '../services/load_service.dart';
 import '../widgets/custom_bottom_nav.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auth_service.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:ui';
 
 class LoadBoardScreen extends StatefulWidget {
   const LoadBoardScreen({super.key});
@@ -17,10 +21,46 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
+  bool _checkingProfile = true;
+  bool _profileComplete = false;
+  bool _hasId = false;
+  bool _hasCdl = false;
+
   @override
   void initState() {
     super.initState();
+    _checkProfileCompleteness();
     _loadsFuture = _loadService.getAvailableLoads();
+  }
+
+  Future<void> _checkProfileCompleteness() async {
+    final auth = AuthService();
+    final user = auth.currentUser;
+    if (user == null) {
+      if (mounted) {
+        setState(() {
+          _checkingProfile = false;
+          _profileComplete = false;
+        });
+      }
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final emailKey = user.email;
+    final hasId = prefs.getBool('${emailKey}_id_uploaded') ?? false;
+    final hasCdl = prefs.getBool('${emailKey}_cdl_uploaded') ?? false;
+    final vehicle = auth.getVehicleProfile(user.id);
+    final hasVehicle = vehicle != null;
+
+    if (mounted) {
+      setState(() {
+        _hasId = hasId;
+        _hasCdl = hasCdl;
+        _profileComplete = hasId && hasCdl && hasVehicle;
+        _checkingProfile = false;
+      });
+    }
   }
 
   @override
@@ -31,202 +71,336 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      extendBody: true,
-      body: Stack(
-        children: [
-          // Background Gradient
-          Container(
-            height: 350,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFC07BFE),
-                  Color(0xFFF8F9FA),
-                ],
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                // Top Header
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 15),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E1128),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: const Row(
-                      children: [
-                         Expanded(
-                          child: Text(
-                            'Load Board',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                // Search Input
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4)),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      style: const TextStyle(color: Colors.black),
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value.toLowerCase();
-                        });
-                      },
-                      decoration: const InputDecoration(
-                        icon: Icon(Icons.search, color: Colors.grey),
-                        hintText: 'Search origin, destination...',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 15),
+    if (_checkingProfile) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFFAFAFA),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF0a2226)),
+        ),
+      );
+    }
 
-                // Filters
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      _buildFilterPill('All'),
-                      _buildFilterPill('Best Pay'),
-                      _buildFilterPill('Nearby'),
-                      _buildFilterPill('Flatbed'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 15),
-
-                // Title
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '🔥 EXPIRING SOON',
-                      style: TextStyle(
-                        color: Colors.black.withOpacity(0.5),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Load List
-                Expanded(
-                  child: FutureBuilder<List<Load>>(
-                    future: _loadsFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      }
-                      final loads = snapshot.data ?? [];
-
-                      var filteredLoads = loads.where((l) {
-                        if (_searchQuery.isEmpty) return true;
-                        return l.origin.toLowerCase().contains(_searchQuery) ||
-                            l.destination
-                                .toLowerCase()
-                                .contains(_searchQuery) ||
-                            l.commodity.toLowerCase().contains(_searchQuery) ||
-                            l.loadNumber.toLowerCase().contains(_searchQuery);
-                      }).toList();
-
-                      if (_selectedFilter == 'Best Pay') {
-                        filteredLoads.sort((a, b) {
-                          double rateA = double.tryParse(
-                                  a.rate.replaceAll(RegExp(r'[^0-9.]'), '')) ??
-                              0;
-                          double rateB = double.tryParse(
-                                  b.rate.replaceAll(RegExp(r'[^0-9.]'), '')) ??
-                              0;
-                          return rateB.compareTo(rateA);
-                        });
-                      } else if (_selectedFilter == 'Flatbed') {
-                        filteredLoads = filteredLoads.where((l) {
-                          return l.status.toLowerCase().contains('flatbed') ||
-                              l.requirements.any(
-                                  (r) => r.toLowerCase().contains('flatbed'));
-                        }).toList();
-                      } else if (_selectedFilter == 'Nearby') {
-                        filteredLoads = filteredLoads
-                            .where((l) => l.distance.toLowerCase().contains('km'))
-                            .toList();
-                      }
-
-                      if (filteredLoads.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            'No matches',
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.only(
-                            left: 20, right: 20, bottom: 100),
-                        itemCount: filteredLoads.length,
-                        itemBuilder: (context, index) {
-                          return _buildLoadCard(filteredLoads[index]);
-                        },
-                      );
-                    },
-                  ),
-                ),
+    Widget mainBody = Stack(
+      children: [
+        // Background Gradient
+        Container(
+          height: 220,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF0a2226),
+                Color(0xFFFAFAFA),
               ],
             ),
           ),
+        ),
+        SafeArea(
+          child: Column(
+            children: [
+              // Top Header
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0a2226),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Load Board',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              // Search Input
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4)),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    style: const TextStyle(color: Colors.black),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value.toLowerCase();
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      icon: Icon(Icons.search, color: Colors.grey),
+                      hintText: 'Search origin, destination...',
+                      hintStyle: TextStyle(color: Colors.grey),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              // Filters
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    _buildFilterPill('All'),
+                    _buildFilterPill('Best Pay'),
+                    _buildFilterPill('Nearby'),
+                    _buildFilterPill('Flatbed'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              // Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '🔥 EXPIRING SOON',
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF71717A),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Load List
+              Expanded(
+                child: FutureBuilder<List<Load>>(
+                  future: _loadsFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+                    final loads = snapshot.data ?? [];
+
+                    var filteredLoads = loads.where((l) {
+                      if (_searchQuery.isEmpty) return true;
+                      return l.origin.toLowerCase().contains(_searchQuery) ||
+                          l.destination.toLowerCase().contains(_searchQuery) ||
+                          l.commodity.toLowerCase().contains(_searchQuery) ||
+                          l.loadNumber.toLowerCase().contains(_searchQuery);
+                    }).toList();
+
+                    if (_selectedFilter == 'Best Pay') {
+                      filteredLoads.sort((a, b) {
+                        double rateA = double.tryParse(
+                                a.rate.replaceAll(RegExp(r'[^0-9.]'), '')) ??
+                            0;
+                        double rateB = double.tryParse(
+                                b.rate.replaceAll(RegExp(r'[^0-9.]'), '')) ??
+                            0;
+                        return rateB.compareTo(rateA);
+                      });
+                    } else if (_selectedFilter == 'Flatbed') {
+                      filteredLoads = filteredLoads.where((l) {
+                        return l.status.toLowerCase().contains('flatbed') ||
+                            l.requirements.any(
+                                (r) => r.toLowerCase().contains('flatbed'));
+                      }).toList();
+                    } else if (_selectedFilter == 'Nearby') {
+                      filteredLoads = filteredLoads
+                          .where((l) => l.distance.toLowerCase().contains('km'))
+                          .toList();
+                    }
+
+                    if (filteredLoads.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          'No matches',
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      padding: const EdgeInsets.only(
+                          left: 20, right: 20, bottom: 100),
+                      itemCount: filteredLoads.length,
+                      itemBuilder: (context, index) {
+                        return _buildLoadCard(filteredLoads[index]);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    if (!_profileComplete) {
+      mainBody = Stack(
+        children: [
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+            child: mainBody,
+          ),
+          Container(
+            color: Colors.black.withOpacity(0.4),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Card(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24)),
+                elevation: 4,
+                shadowColor: const Color(0xFF0a2226).withOpacity(0.10),
+                child: Padding(
+                  padding: const EdgeInsets.all(28),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0a2226).withOpacity(0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.verified_user_outlined,
+                          color: Color(0xFF0a2226),
+                          size: 40,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Profile Incomplete',
+                        style: GoogleFonts.outfit(
+                          color: const Color(0xFF0a2226),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Please complete your profile verification to unlock access to the load board.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          color: Colors.black54,
+                          fontSize: 13,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            final auth = AuthService();
+                            final user = auth.currentUser;
+                            if (user != null) {
+                              if (!_hasId) {
+                                Navigator.pushReplacementNamed(
+                                    context, '/id_upload',
+                                    arguments: user.email);
+                              } else if (!_hasCdl) {
+                                Navigator.pushReplacementNamed(
+                                    context, '/cdl_upload',
+                                    arguments: user.email);
+                              } else {
+                                Navigator.pushReplacementNamed(
+                                    context, '/vehicle_registration',
+                                    arguments: false);
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFd6ff00),
+                            foregroundColor: const Color(0xFF0a2226),
+                            shape: const StadiumBorder(),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Complete Profile',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushNamedAndRemoveUntil(
+                              context, '/home', (route) => false);
+                        },
+                        child: Text(
+                          'Go Back',
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF71717A),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
-      ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
+      extendBody: true,
+      body: mainBody,
       bottomNavigationBar: CustomBottomNav(
         currentIndex: 2,
         onTap: (index) {
-          if (index == 0) Navigator.pushReplacementNamed(context, '/home');
-          if (index == 1) Navigator.pushNamed(context, '/order_history');
-          if (index == 3) Navigator.pushNamed(context, '/stats');
+          if (index == 0) {
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/home', (route) => false);
+          } else if (index == 1) {
+            Navigator.pushReplacementNamed(context, '/order_history');
+          } else if (index == 3) {
+            Navigator.pushReplacementNamed(context, '/stats');
+          }
         },
       ),
     );
@@ -240,17 +414,18 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.black : Colors.white,
+          color: isSelected ? const Color(0xFF0a2226) : Colors.white,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE4E4E7)),
           boxShadow: [
             if (!isSelected)
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5),
+              BoxShadow(color: const Color(0xFF0a2226).withOpacity(0.03), blurRadius: 5),
           ],
         ),
         child: Text(
           title,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black87,
+          style: GoogleFonts.inter(
+            color: isSelected ? Colors.white : const Color(0xFF71717A),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -265,10 +440,10 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: const Color(0xFFE4E4E7)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: const Color(0xFF0a2226).withOpacity(0.02),
               blurRadius: 15,
               offset: const Offset(0, 5)),
         ],
@@ -283,8 +458,8 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
               Row(
                 children: [
                   Text(load.loadNumber,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 18)),
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF0a2226))),
                   const SizedBox(width: 10),
                   Container(
                     padding:
@@ -297,7 +472,7 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
                         Icon(Icons.bolt,
                             color: Colors.orange.shade400, size: 14),
                         Text('1h left',
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                                 color: Colors.orange.shade700,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold)),
@@ -310,15 +485,15 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(load.rate,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 20)),
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold, fontSize: 20, color: const Color(0xFF0a2226))),
                   Text('↑ ${load.rateUnit}',
-                      style: const TextStyle(
+                      style: GoogleFonts.inter(
                           color: Colors.green,
                           fontSize: 10,
                           fontWeight: FontWeight.bold)),
                   Text(load.distance,
-                      style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                      style: GoogleFonts.inter(color: const Color(0xFF71717A), fontSize: 10)),
                 ],
               )
             ],
@@ -333,15 +508,15 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(load.origin,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 15)),
+                        style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF0a2226))),
                     Text(load.originState,
                         style:
-                            const TextStyle(color: Colors.grey, fontSize: 10)),
+                            GoogleFonts.inter(color: const Color(0xFF71717A), fontSize: 10)),
                     const SizedBox(height: 4),
                     Text('${load.originDate} • ${load.originTime}',
                         style:
-                            const TextStyle(color: Colors.grey, fontSize: 10)),
+                            GoogleFonts.inter(color: const Color(0xFF71717A), fontSize: 10)),
                   ],
                 ),
               ),
@@ -359,7 +534,7 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
                   const Icon(Icons.local_shipping,
                       color: Colors.green, size: 16),
                   Text(load.distance,
-                      style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                      style: GoogleFonts.inter(color: const Color(0xFF71717A), fontSize: 10)),
                 ],
               ),
               Expanded(
@@ -367,15 +542,15 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(load.destination,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 15)),
+                        style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF0a2226))),
                     Text(load.destinationState,
                         style:
-                            const TextStyle(color: Colors.grey, fontSize: 10)),
+                            GoogleFonts.inter(color: const Color(0xFF71717A), fontSize: 10)),
                     const SizedBox(height: 4),
                     Text('${load.destinationDate} • ${load.destinationTime}',
                         style:
-                            const TextStyle(color: Colors.grey, fontSize: 10)),
+                            GoogleFonts.inter(color: const Color(0xFF71717A), fontSize: 10)),
                   ],
                 ),
               ),
@@ -389,8 +564,8 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
             runSpacing: 8,
             children: [
               _buildInfoPill(load.status, Colors.teal.shade50, Colors.teal),
-              ...load.requirements
-                  .map((req) => _buildInfoPill(req, Colors.blue.shade50, Colors.blue)),
+              ...load.requirements.map((req) =>
+                  _buildInfoPill(req, Colors.blue.shade50, Colors.blue)),
               _buildInfoPill(load.weight, Colors.grey.shade100, Colors.black87),
               _buildInfoPill(
                   load.commodity, Colors.orange.shade50, Colors.orange),
@@ -407,25 +582,25 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
                 width: 35,
                 height: 35,
                 decoration: BoxDecoration(
-                    color: Colors.teal, borderRadius: BorderRadius.circular(8)),
-                child: const Center(
+                    color: const Color(0xFF0a2226), borderRadius: BorderRadius.circular(8)),
+                child: Center(
                     child: Text('CH',
-                        style: TextStyle(
+                        style: GoogleFonts.outfit(
                             color: Colors.white, fontWeight: FontWeight.bold))),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Cargohub Brokers',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 12)),
+                        style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold, fontSize: 12, color: const Color(0xFF0a2226))),
                     Row(
                       children: [
-                        Icon(Icons.star, color: Colors.orange, size: 12),
+                        const Icon(Icons.star, color: Colors.orange, size: 12),
                         Text(' 4.9 • 312 loads',
-                            style: TextStyle(color: Colors.grey, fontSize: 10)),
+                            style: GoogleFonts.inter(color: const Color(0xFF71717A), fontSize: 10)),
                       ],
                     ),
                   ],
@@ -443,7 +618,7 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
                 onPressed: () => Navigator.pushNamed(context, '/load_details',
                     arguments: load),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
+                  backgroundColor: const Color(0xFF0a2226),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -451,9 +626,9 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
                 ),
-                child: const Text('Load Details',
+                child: Text('Load Details',
                     style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                        GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12)),
               ),
             ],
           )

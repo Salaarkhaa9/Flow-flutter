@@ -10,6 +10,7 @@ import '../services/api_client.dart';
 import '../models/shipment.dart';
 import '../models/vehicle_profile.dart';
 import '../widgets/custom_bottom_nav.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'shipment_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -32,6 +33,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isOnDuty = false;
   String _locationText = 'Fetching location...';
   Timer? _locationTimer;
+  bool _idUploaded = false;
+  bool _cdlUploaded = false;
 
   @override
   void initState() {
@@ -59,10 +62,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = _auth.currentUser;
     final vehicleProfile =
         user == null ? null : _auth.getVehicleProfile(user.id);
+
+    final prefs = await SharedPreferences.getInstance();
+    final emailKey = user?.email ?? '';
+    final idUploaded = prefs.getBool('${emailKey}_id_uploaded') ?? false;
+    final cdlUploaded = prefs.getBool('${emailKey}_cdl_uploaded') ?? false;
+
     if (!mounted) return;
     setState(() {
       _shipments = list;
       _vehicleProfile = vehicleProfile;
+      _idUploaded = idUploaded;
+      _cdlUploaded = cdlUploaded;
       _loading = false;
     });
   }
@@ -112,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // ── Reverse geocode for display ─────────────────────────────────────
       final url = Uri.parse('https://nominatim.openstreetmap.org/reverse'
-          '?lat=${pos.latitude}&lon=${pos.longitude}&format=json');
+          '?lat=${pos.latitude}&lon=${pos.longitude}&format=json&accept-language=en');
       final res =
           await http.get(url, headers: {'User-Agent': 'FlowDriverApp/1.0'});
       if (res.statusCode == 200) {
@@ -151,18 +162,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openLoadBoard() async {
-    if (_vehicleProfile == null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Complete vehicle registration before booking a load.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      _navigateToVehicleRegistration();
-      return;
-    }
-
     if (_shipments.isNotEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -227,11 +226,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF8E5AF7).withOpacity(0.12),
+                          color: const Color(0xFF0a2226).withOpacity(0.08),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.edit_outlined,
-                            color: Color(0xFF7A3FF2)),
+                            color: Color(0xFF0a2226)),
                       ),
                       const SizedBox(width: 12),
                       const Expanded(
@@ -505,10 +504,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                       }
                                     },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF8E5AF7),
+                                backgroundColor: const Color(0xFF0a2226),
                                 foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14)),
+                                shape: const StadiumBorder(),
+                                elevation: 0,
                               ),
                               child: isSaving
                                   ? const SizedBox(
@@ -569,16 +568,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildDrawer(),
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: Stack(
         children: [
           Container(
-            height: 350,
+            height: 280,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFFCE9FFC), Color(0xFFF8F9FA)],
+                colors: [Color(0xFF0a2226), Color(0xFFFAFAFA)],
               ),
             ),
           ),
@@ -599,13 +598,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () => _scaffoldKey.currentState?.openDrawer(),
                           child: CircleAvatar(
                             radius: 22,
-                            backgroundColor: const Color(0xFF1E1128),
+                            backgroundColor: const Color(0xFFd6ff00),
                             child: Text(
                               username.isNotEmpty
                                   ? username[0].toUpperCase()
                                   : 'D',
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: Color(0xFF0a2226),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
                               ),
@@ -616,12 +615,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         Image.asset(
                           'assets/logo.png',
                           height: 36,
+                          color: Colors.white,
+                          colorBlendMode: BlendMode.srcIn,
                         ),
                         const Spacer(),
                         GestureDetector(
                           onTap: () => Navigator.pushNamed(context, '/search'),
-                          child: Icon(Icons.search,
-                              size: 22, color: Colors.grey.shade700),
+                          child: const Icon(Icons.search,
+                              size: 22, color: Colors.white),
                         ),
                         const SizedBox(width: 14),
                         // ── Notification bell with unread badge ──────────────
@@ -634,8 +635,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
-                                  Icon(Icons.notifications_none_rounded,
-                                      size: 22, color: Colors.grey.shade700),
+                                  const Icon(Icons.notifications_none_rounded,
+                                      size: 22, color: Colors.white),
                                   if (_notifService.hasUnread)
                                     Positioned(
                                       top: -2,
@@ -663,13 +664,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 18, vertical: 16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E1128),
+                        color: const Color(0xFF0a2226),
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
-                            blurRadius: 14,
-                            offset: const Offset(0, 6),
+                            color: const Color(0xFF0a2226).withOpacity(0.25),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
@@ -687,7 +688,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       'Welcome, $username!',
                                       style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 18,
+                                        fontSize: 15,
                                         fontWeight: FontWeight.w800,
                                       ),
                                     ),
@@ -695,14 +696,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Row(
                                       children: [
                                         const Icon(Icons.location_on_rounded,
-                                            size: 14, color: Color(0xFFCE9FFC)),
+                                            size: 14, color: Color(0xFFd6ff00)),
                                         const SizedBox(width: 4),
                                         Expanded(
                                           child: Text(
                                             _locationText,
                                             style: const TextStyle(
-                                              color: Color(0xFFCE9FFC),
-                                              fontSize: 13,
+                                              color: Color(0xFFd6ff00),
+                                              fontSize: 10,
                                               fontWeight: FontWeight.w600,
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -720,7 +721,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           currentDate,
                                           style: const TextStyle(
                                             color: Colors.white54,
-                                            fontSize: 12,
+                                            fontSize: 10,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -739,7 +740,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                       color: _isOnDuty
-                                          ? const Color(0xFFCE9FFC)
+                                          ? const Color(0xFFd6ff00)
                                           : Colors.white38,
                                     ),
                                   ),
@@ -755,7 +756,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(14),
                                         color: _isOnDuty
-                                            ? const Color(0xFF7A3FF2)
+                                            ? const Color(0xFFd6ff00)
                                             : Colors.white24,
                                       ),
                                       child: Stack(
@@ -840,21 +841,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFC07BFE),
+                          color: const Color(0xFF0a2226),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Column(
                           children: [
-                            const Text('No shipment available',
+                            const Text('No active shipment',
                                 style: TextStyle(
-                                    color: Colors.white,
+                                    color: Colors.white70,
                                     fontWeight: FontWeight.w600)),
                             const SizedBox(height: 12),
                             ElevatedButton(
                               onPressed: _openLoadBoard,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
-                                foregroundColor: Colors.white,
+                                backgroundColor: const Color(0xFFd6ff00),
+                                foregroundColor: const Color(0xFF0a2226),
+                                shape: const StadiumBorder(),
                               ),
                               child: const Text('Browse Loads'),
                             )
@@ -873,9 +875,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    if (!_loading && _vehicleProfile == null)
+                    if (!_loading &&
+                        (!_idUploaded ||
+                            !_cdlUploaded ||
+                            _vehicleProfile == null))
                       _buildProfileProgressCard(),
-                    if (!_loading && _vehicleProfile != null)
+                    if (!_loading &&
+                        _idUploaded &&
+                        _cdlUploaded &&
+                        _vehicleProfile != null)
                       _buildVehicleInfoCard(),
                     const SizedBox(height: 100),
                   ],
@@ -895,7 +903,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: const Color(0xFF0a2226).withOpacity(0.15),
                         blurRadius: 30,
                         offset: const Offset(0, 10),
                       ),
@@ -907,13 +915,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF8E5AF7).withOpacity(0.12),
+                          color: const Color(0xFF0a2226).withOpacity(0.08),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.celebration,
                           size: 60,
-                          color: Color(0xFF8E5AF7),
+                          color: Color(0xFF0a2226),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -922,7 +930,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E1128),
+                          color: Color(0xFF0a2226),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -931,7 +939,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF8E5AF7),
+                          color: Color(0xFF0a2226),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -958,9 +966,36 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _handleProfileProgressTap() async {
+    final email = _auth.currentUser?.email ?? '';
+    if (!_idUploaded) {
+      await Navigator.pushNamed(context, '/id_upload', arguments: email);
+      await _loadHomeData();
+    } else if (!_cdlUploaded) {
+      await Navigator.pushNamed(context, '/cdl_upload', arguments: email);
+      await _loadHomeData();
+    } else {
+      _navigateToVehicleRegistration();
+    }
+  }
+
   Widget _buildProfileProgressCard() {
+    String descriptionText = 'Register your vehicle to start booking loads.';
+    double progressPercent = 0.66;
+    String progressLabel = '66%';
+
+    if (!_idUploaded) {
+      descriptionText = 'Upload your government ID to verify identity.';
+      progressPercent = 0.15;
+      progressLabel = '15%';
+    } else if (!_cdlUploaded) {
+      descriptionText = 'Upload your Commercial Driver\'s License.';
+      progressPercent = 0.40;
+      progressLabel = '40%';
+    }
+
     return GestureDetector(
-      onTap: _navigateToVehicleRegistration,
+      onTap: _handleProfileProgressTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
@@ -974,7 +1009,7 @@ class _HomeScreenState extends State<HomeScreen> {
               offset: const Offset(0, 8),
             ),
           ],
-          border: Border.all(color: const Color(0xFFE8E1FF)),
+          border: Border.all(color: const Color(0xFFE4E4E7)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -991,19 +1026,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.green),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Complete Your Profile',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w800),
                       ),
-                      SizedBox(height: 3),
+                      const SizedBox(height: 3),
                       Text(
-                        'Register your vehicle to start booking loads.',
-                        style: TextStyle(color: Colors.black54, fontSize: 12),
+                        descriptionText,
+                        style: const TextStyle(
+                            color: Colors.black54, fontSize: 12),
                       ),
                     ],
                   ),
@@ -1012,20 +1048,20 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            const Row(
+            Row(
               children: [
                 Text(
-                  '50% Profile Completed',
-                  style: TextStyle(
+                  '$progressLabel Profile Completed',
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: Colors.black87,
                   ),
                 ),
-                Spacer(),
+                const Spacer(),
                 Text(
-                  '50%',
-                  style: TextStyle(
+                  progressLabel,
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: Colors.green,
@@ -1037,7 +1073,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
-                value: 0.5,
+                value: progressPercent,
                 backgroundColor: Colors.grey.shade200,
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
                 minHeight: 10,
@@ -1046,9 +1082,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                _buildProgressStep('Account Setup', true),
+                _buildProgressStep('ID Upload', _idUploaded),
                 const SizedBox(width: 8),
-                _buildProgressStep('Vehicle Reg.', false),
+                _buildProgressStep('CDL Upload', _cdlUploaded),
+                const SizedBox(width: 8),
+                _buildProgressStep('Vehicle Reg.', _vehicleProfile != null),
               ],
             ),
           ],
@@ -1104,7 +1142,7 @@ class _HomeScreenState extends State<HomeScreen> {
             offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: const Color(0xFFE8E1FF)),
+        border: Border.all(color: const Color(0xFFE4E4E7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1114,11 +1152,11 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8E5AF7).withOpacity(0.12),
+                  color: const Color(0xFF0a2226).withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.verified_outlined,
-                    color: Color(0xFF7A3FF2)),
+                    color: Color(0xFF0a2226)),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -1232,13 +1270,13 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: accent
-            ? const Color(0xFF8E5AF7).withOpacity(0.12)
-            : const Color(0xFFF7F6FB),
+            ? const Color(0xFF0a2226).withOpacity(0.06)
+            : const Color(0xFFF4F4F5),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
             color: accent
-                ? const Color(0xFF8E5AF7).withOpacity(0.2)
-                : Colors.grey.shade200),
+                ? const Color(0xFF0a2226).withOpacity(0.15)
+                : const Color(0xFFE4E4E7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1247,7 +1285,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             label,
             style: TextStyle(
-              color: accent ? const Color(0xFF7A3FF2) : Colors.black45,
+              color: accent ? const Color(0xFF0a2226) : Colors.black45,
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
@@ -1290,7 +1328,7 @@ class _HomeScreenState extends State<HomeScreen> {
             borderSide: BorderSide(color: Colors.grey.shade200)),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF8E5AF7), width: 1.5)),
+            borderSide: const BorderSide(color: Color(0xFF0a2226), width: 1.5)),
       ),
     );
   }
@@ -1303,21 +1341,21 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: value
-              ? const Color(0xFF8E5AF7).withOpacity(0.12)
-              : const Color(0xFFF7F6FB),
+              ? const Color(0xFF0a2226).withOpacity(0.08)
+              : const Color(0xFFF4F4F5),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: value ? const Color(0xFF8E5AF7) : Colors.grey.shade200),
+              color: value ? const Color(0xFF0a2226) : const Color(0xFFE4E4E7)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(value ? Icons.check_box : Icons.check_box_outline_blank,
-                color: value ? const Color(0xFF7A3FF2) : Colors.grey, size: 18),
+                color: value ? const Color(0xFF0a2226) : Colors.grey, size: 18),
             const SizedBox(width: 8),
             Text(label,
                 style: TextStyle(
-                    color: value ? const Color(0xFF7A3FF2) : Colors.black54,
+                    color: value ? const Color(0xFF0a2226) : Colors.black54,
                     fontWeight: FontWeight.w600,
                     fontSize: 13)),
           ],
@@ -1342,12 +1380,12 @@ class _HomeScreenState extends State<HomeScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFC07BFE),
+        color: const Color(0xFF0a2226),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFC07BFE).withOpacity(0.35),
-            blurRadius: 15,
+            color: const Color(0xFF0a2226).withOpacity(0.25),
+            blurRadius: 18,
             offset: const Offset(0, 8),
           ),
         ],
@@ -1364,7 +1402,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(s.commodity.isNotEmpty ? s.commodity : '-',
               style: const TextStyle(color: Colors.white70, fontSize: 12)),
           const SizedBox(height: 12),
-          const Divider(color: Colors.white30, height: 1, thickness: 1),
+          Divider(color: Colors.white.withOpacity(0.15), height: 1, thickness: 1),
           const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1411,12 +1449,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ElevatedButton(
                     onPressed: () => _goToMap(s),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal.shade400,
-                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFFd6ff00),
+                      foregroundColor: const Color(0xFF0a2226),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                      shape: const StadiumBorder(),
+                      elevation: 0,
                     ),
                     child: const Text('Go to Map',
                         style: TextStyle(
@@ -1439,10 +1477,11 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE4E4E7)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 10,
+              color: const Color(0xFF0a2226).withOpacity(0.05),
+              blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
@@ -1450,15 +1489,15 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 28, color: Colors.black87),
-            const SizedBox(height: 12),
+            Icon(icon, size: 26, color: const Color(0xFF0a2226)),
+            const SizedBox(height: 10),
             Text(
               label,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.black87,
+                color: Color(0xFF0a2226),
                 fontSize: 11,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w700,
                 height: 1.2,
               ),
             ),
@@ -1481,22 +1520,20 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           DrawerHeader(
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFC07BFE), Color(0xFF8A30FA)],
-              ),
+              color: Color(0xFF0a2226),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CircleAvatar(
                   radius: 35,
-                  backgroundColor: Colors.white,
+                  backgroundColor: const Color(0xFFd6ff00),
                   child: Text(
                     initial,
                     style: const TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF8A30FA),
+                      color: Color(0xFF0a2226),
                     ),
                   ),
                 ),
@@ -1512,7 +1549,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   user?.email ?? 'driver@flow.com',
                   style: const TextStyle(
-                    color: Colors.white70,
+                    color: Colors.white60,
                     fontSize: 12,
                   ),
                 ),
@@ -1520,18 +1557,28 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.person, color: Colors.black87),
-            title: const Text('Manage Profile',
-                style: TextStyle(color: Colors.black87)),
+            leading: const Icon(Icons.person_outline, color: Color(0xFF0a2226)),
+            title: const Text('Manage Personal Profile',
+                style: TextStyle(color: Color(0xFF0a2226), fontWeight: FontWeight.w600)),
             onTap: () {
               Navigator.pop(context);
               Navigator.pushNamed(context, '/profile');
             },
           ),
-          const Divider(),
+          const Divider(color: Color(0xFFE4E4E7)),
+          ListTile(
+            leading: const Icon(Icons.business_center_outlined, color: Color(0xFF0a2226)),
+            title: const Text('Manage Business Profile',
+                style: TextStyle(color: Color(0xFF0a2226), fontWeight: FontWeight.w600)),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/business_profile');
+            },
+          ),
+          const Divider(color: Color(0xFFE4E4E7)),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Logout', style: TextStyle(color: Colors.red)),
+            title: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
             onTap: () async {
               final nav = Navigator.of(context);
               await _auth.logout();
