@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class SupportChatMessage {
@@ -23,8 +24,9 @@ class CustomerSupportService {
     required List<SupportChatMessage> history,
     required String userMessage,
   }) async {
-    print('[CustomerSupport] Key length: ${_apiKey.length}');
-    print('[CustomerSupport] Key starts with: ${_apiKey.substring(0, _apiKey.length > 10 ? 10 : _apiKey.length)}');
+    debugPrint('[CustomerSupport] Key length: ${_apiKey.length}');
+    debugPrint(
+        '[CustomerSupport] Key starts with: ${_apiKey.substring(0, _apiKey.length > 10 ? 10 : _apiKey.length)}');
     final response = await http.post(
       Uri.parse(_apiUrl),
       headers: {
