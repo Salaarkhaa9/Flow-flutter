@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_bottom_nav.dart';
 import '../theme/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -39,20 +38,12 @@ class StatsScreen extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.arrow_back,
-                              color: Colors.white, size: 20),
-                        ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: Text(
-                            'Stats',
-                            style: GoogleFonts.outfit(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
+                        Text(
+                          'Stats',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
                           ),
                         ),
                       ],
@@ -108,20 +99,6 @@ class StatsScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-      extendBody: true,
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: 3,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushNamedAndRemoveUntil(
-                context, '/home', (route) => false);
-          } else if (index == 1) {
-            Navigator.pushReplacementNamed(context, '/order_history');
-          } else if (index == 2) {
-            Navigator.pushReplacementNamed(context, '/load_board');
-          }
-        },
       ),
     );
   }

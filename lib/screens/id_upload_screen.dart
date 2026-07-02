@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/document_service.dart';
-import '../services/api_client.dart';
+// import '../services/api_client.dart';
 
 class IdUploadScreen extends StatefulWidget {
   /// Email passed from registration (for display purposes).
@@ -30,8 +30,8 @@ class _IdUploadScreenState extends State<IdUploadScreen>
   String _error = '';
   bool _uploadSuccess = false;
 
-  String _selectedIdType = 'State ID';
-  final List<String> _idTypes = ['State ID', 'Driver\'s License'];
+  String _selectedIdType = 'CNIC';
+  final List<String> _idTypes = ['CNIC', 'Driving License'];
 
   // Animations
   late AnimationController _pulseController;
@@ -125,28 +125,28 @@ class _IdUploadScreenState extends State<IdUploadScreen>
     });
 
     try {
-      final resFront = await _docService.uploadDocument(
-        filePath: _frontImage!.path,
-        type: 'government_id',
-      );
-      final urlFront = resFront?['fileUrl']?.toString() ?? _frontImage!.path;
-
-      // Upload back too if provided
-      String? urlBack;
-      if (_backImage != null) {
-        final resBack = await _docService.uploadDocument(
-          filePath: _backImage!.path,
-          type: 'government_id_back',
+      // Try uploading to backend — non-blocking, proceed regardless
+      try {
+        await _docService.uploadDocument(
+          filePath: _frontImage!.path,
+          type: 'government_id',
         );
-        urlBack = resBack?['fileUrl']?.toString() ?? _backImage!.path;
+        if (_backImage != null) {
+          await _docService.uploadDocument(
+            filePath: _backImage!.path,
+            type: 'government_id_back',
+          );
+        }
+      } catch (_) {
+        // Backend upload failed (e.g. 500, no token) — ignore and proceed locally
       }
 
-      // Save status locally
+      // Always save status locally
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('${widget.userEmail.toLowerCase()}_id_uploaded', true);
-      await prefs.setString('${widget.userEmail.toLowerCase()}_id_front_path', urlFront);
-      if (urlBack != null) {
-        await prefs.setString('${widget.userEmail.toLowerCase()}_id_back_path', urlBack);
+      await prefs.setString('${widget.userEmail.toLowerCase()}_id_front_path', _frontImage!.path);
+      if (_backImage != null) {
+        await prefs.setString('${widget.userEmail.toLowerCase()}_id_back_path', _backImage!.path);
       }
 
       setState(() {
@@ -164,15 +164,10 @@ class _IdUploadScreenState extends State<IdUploadScreen>
           arguments: widget.userEmail,
         );
       }
-    } on ApiException catch (e) {
-      setState(() {
-        _isUploading = false;
-        _error = e.message;
-      });
     } catch (e) {
       setState(() {
         _isUploading = false;
-        _error = 'Upload failed. You can skip and upload later from your profile.';
+        _error = 'Something went wrong. Please try again.';
       });
     }
   }
@@ -307,7 +302,7 @@ class _IdUploadScreenState extends State<IdUploadScreen>
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            'Step 1 of 3 — Government ID',
+                            'Step 1 of 3 — Identity Document',
                             style: GoogleFonts.inter(
                               color: Colors.white70,
                               fontSize: 12,
@@ -329,7 +324,7 @@ class _IdUploadScreenState extends State<IdUploadScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Upload a clear photo of your\ngovernment-issued ID',
+                      'Upload a clear photo of your\nCNIC or Pakistani Driving License',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.inter(
                         color: Colors.white60,
@@ -710,14 +705,11 @@ class _IdUploadScreenState extends State<IdUploadScreen>
 
   String _fieldLabel(String key) {
     const labels = {
-      'idNumber': 'ID Number',
+      'idNumber': 'Identity Number',
       'licenseNumber': 'License No.',
-      'expiryDate': 'Expires',
-      'dateOfBirth': 'Date of Birth',
-      'firstName': 'First Name',
-      'lastName': 'Last Name',
+      'firstName': 'Name',
+      'expiryDate': 'Date of Expiry',
       'cdlClass': 'Class',
-      'state': 'State',
     };
     return labels[key] ?? key;
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/load.dart';
 import '../services/load_service.dart';
-import '../widgets/custom_bottom_nav.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -134,34 +133,43 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
                   ),
                 ),
               ),
-              // Search Input
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  height: 46,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4)),
+                        color: const Color(0xFF0a2226).withOpacity(0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
                     ],
                   ),
                   child: TextField(
                     controller: _searchController,
-                    style: const TextStyle(color: Colors.black),
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: const Color(0xFF18181B),
+                      fontWeight: FontWeight.w500,
+                    ),
                     onChanged: (value) {
                       setState(() {
                         _searchQuery = value.toLowerCase();
                       });
                     },
-                    decoration: const InputDecoration(
-                      icon: Icon(Icons.search, color: Colors.grey),
+                    decoration: InputDecoration(
                       hintText: 'Search origin, destination...',
-                      hintStyle: TextStyle(color: Colors.grey),
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: Icon(Icons.search,
+                          color: Colors.grey.shade400, size: 20),
                       border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 13),
                     ),
                   ),
                 ),
@@ -396,21 +404,7 @@ class _LoadBoardScreenState extends State<LoadBoardScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      extendBody: true,
       body: mainBody,
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: 2,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushNamedAndRemoveUntil(
-                context, '/home', (route) => false);
-          } else if (index == 1) {
-            Navigator.pushReplacementNamed(context, '/order_history');
-          } else if (index == 3) {
-            Navigator.pushReplacementNamed(context, '/stats');
-          }
-        },
-      ),
     );
   }
 

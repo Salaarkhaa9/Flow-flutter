@@ -421,7 +421,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
           Navigator.pushReplacementNamed(
             context,
-            '/id_upload',
+            '/otp_verification',
             arguments: rawEmail.trim(),
           );
         }

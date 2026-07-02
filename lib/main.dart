@@ -4,8 +4,11 @@ import 'screens/intro_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/id_upload_screen.dart';
+import 'screens/otp_verification_screen.dart';
+import 'screens/forgot_password_screen.dart';
+import 'screens/reset_password_screen.dart';
 import 'screens/cdl_upload_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_shell.dart';
 import 'screens/shipment_detail_screen.dart';
 import 'screens/load_board_screen.dart';
 import 'screens/load_details_screen.dart';
@@ -46,6 +49,17 @@ class FlowApp extends StatelessWidget {
         '/': (context) => const IntroScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/forgot_password': (context) => const ForgotPasswordScreen(),
+        '/reset_password': (context) {
+          final email =
+              ModalRoute.of(context)?.settings.arguments as String? ?? '';
+          return ResetPasswordScreen(userEmail: email);
+        },
+        '/otp_verification': (context) {
+          final email =
+              ModalRoute.of(context)?.settings.arguments as String? ?? '';
+          return OtpVerificationScreen(userEmail: email);
+        },
         '/id_upload': (context) {
           final email =
               ModalRoute.of(context)?.settings.arguments as String? ?? '';
@@ -56,7 +70,7 @@ class FlowApp extends StatelessWidget {
               ModalRoute.of(context)?.settings.arguments as String? ?? '';
           return CdlUploadScreen(userEmail: email);
         },
-        '/home': (context) => const HomeScreen(),
+        '/home': (context) => const MainShell(),
         '/profile': (context) => const ProfileScreen(),
         '/load_board': (context) => const LoadBoardScreen(),
         '/customer_support': (context) => const CustomerSupportScreen(),

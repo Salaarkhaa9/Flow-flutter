@@ -9,6 +9,8 @@ import '../services/load_service.dart';
 import '../services/shipment_service.dart';
 import '../services/notification_service.dart';
 import '../widgets/custom_bottom_nav.dart';
+import '../theme/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LoadDetailsScreen extends StatefulWidget {
   final Load load;
@@ -178,7 +180,7 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFFCE9FFC),
+                  Color(0xFFE6ECEF),
                   Colors.white,
                 ],
               ),
@@ -197,7 +199,7 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 15, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E1128),
+                        color: AppTheme.slateDeep,
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Row(
@@ -208,10 +210,10 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                                 color: Colors.white, size: 20),
                           ),
                           const SizedBox(width: 15),
-                          const Expanded(
+                          Expanded(
                             child: Text(
                               'Load details',
-                              style: TextStyle(
+                              style: GoogleFonts.outfit(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -235,7 +237,7 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                                 color: Colors.grey.shade100,
                                 child: const Center(
                                   child: CircularProgressIndicator(
-                                      color: Color(0xFF7C3AED)),
+                                      color: AppTheme.slateDeep),
                                 ),
                               )
                             : FlutterMap(
@@ -262,7 +264,7 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                                         Polyline(
                                           points: _routePoints,
                                           strokeWidth: 3.5,
-                                          color: const Color(0xFF7C3AED),
+                                          color: AppTheme.slateDeep,
                                         ),
                                       ],
                                     ),
@@ -321,7 +323,7 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                         _buildTimelineStep(
                           isFirst: true,
                           pillText: 'Pick up',
-                          pillColor: Colors.purpleAccent,
+                          pillColor: AppTheme.slateDeep,
                           companyName: 'Fresh Food Inc.',
                           rating: '3.5',
                           address: '${_load.origin}, ${_load.originState}',
@@ -330,7 +332,7 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                         _buildTimelineStep(
                           isFirst: false,
                           pillText: 'Delivery',
-                          pillColor: Colors.teal,
+                          pillColor: const Color(0xFFd6ff00),
                           companyName: 'Smart Food Inc.',
                           rating: '4.5',
                           address:
@@ -416,10 +418,9 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _bookLoad,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
+                          backgroundColor: AppTheme.slateDeep,
                           foregroundColor: Colors.white,
-                          elevation: 5,
-                          shadowColor: Colors.teal.withOpacity(0.5),
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15),
                           ),
@@ -427,9 +428,9 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                         child: _isLoading
                             ? const CircularProgressIndicator(
                                 color: Colors.white)
-                            : const Text(
+                            : Text(
                                 'Book Load',
-                                style: TextStyle(
+                                style: GoogleFonts.outfit(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
@@ -480,14 +481,14 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
               height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.black, width: 4),
+                border: Border.all(color: AppTheme.slateDeep, width: 4),
               ),
             ),
             if (isFirst)
               Container(
                 width: 2,
                 height: 70,
-                color: Colors.grey.shade400,
+                color: AppTheme.borderColor,
               ),
           ],
         ),
@@ -505,8 +506,10 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                 ),
                 child: Text(
                   pillText,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: GoogleFonts.inter(
+                    color: pillColor.computeLuminance() > 0.5
+                        ? Colors.black
+                        : Colors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -517,35 +520,45 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                 children: [
                   Text(
                     companyName,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 14),
+                    style: GoogleFonts.outfit(
+                      color: AppTheme.slateDeep,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.star, color: Colors.yellow, size: 14),
+                  const Icon(Icons.star, color: Colors.amber, size: 14),
                   Text(
                     rating,
-                    style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.inter(
+                      color: AppTheme.textPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 4),
               Text(
                 address,
-                style: const TextStyle(fontSize: 12, color: Colors.black87),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
               ),
               Text(
                 date,
-                style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (isFirst) const SizedBox(height: 20),
             ],
           ),
         ),
-        const Icon(Icons.chevron_right, color: Colors.black),
+        const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
       ],
     );
   }
@@ -557,7 +570,8 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
         alignment: Alignment.centerLeft,
         child: Text(
           title,
-          style: const TextStyle(
+          style: GoogleFonts.outfit(
+            color: AppTheme.slateDeep,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -570,7 +584,7 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: Colors.grey.shade600, size: 24),
+        Icon(icon, color: AppTheme.textSecondary, size: 24),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -578,8 +592,8 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
+                style: GoogleFonts.inter(
+                  color: AppTheme.textSecondary,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -587,7 +601,8 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
+                style: GoogleFonts.outfit(
+                  color: AppTheme.slateDeep,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),

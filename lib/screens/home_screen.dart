@@ -9,7 +9,7 @@ import '../services/notification_service.dart';
 import '../services/api_client.dart';
 import '../models/shipment.dart';
 import '../models/vehicle_profile.dart';
-import '../widgets/custom_bottom_nav.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'shipment_detail_screen.dart';
 
@@ -171,18 +171,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _openLoadBoard() async {
-    if (_shipments.isNotEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('You cannot book more than one load at a time.')),
-      );
-      return;
-    }
-    await Navigator.pushNamed(context, '/load_board');
-    await _loadHomeData();
-  }
 
   void _showEditVehicleSheet() {
     final profile = _vehicleProfile!;
@@ -545,15 +533,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _onNavTap(int index) {
-    if (index == 1) {
-      Navigator.pushNamed(context, '/order_history');
-    } else if (index == 2) {
-      _openLoadBoard();
-    } else if (index == 3) {
-      Navigator.pushNamed(context, '/stats');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -862,7 +841,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontWeight: FontWeight.w600)),
                             const SizedBox(height: 12),
                             ElevatedButton(
-                              onPressed: _openLoadBoard,
+                              onPressed: () => Navigator.pushNamed(context, '/load_board'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFd6ff00),
                                 foregroundColor: const Color(0xFF0a2226),
@@ -967,11 +946,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
         ],
-      ),
-      extendBody: true,
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: 0,
-        onTap: _onNavTap,
       ),
     );
   }

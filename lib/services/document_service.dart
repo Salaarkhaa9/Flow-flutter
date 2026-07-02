@@ -119,41 +119,38 @@ class DocumentService {
     return ParsedDocument(type: 'drivers_license', fields: fields, rawText: rawText);
   }
 
-  /// Parses common US government-issued ID / state ID fields from raw OCR text.
+  /// Parses Pakistani CNIC / Driving License fields from raw OCR text.
   ParsedDocument parseGovernmentId(String rawText) {
     final fields = <String, String>{};
 
-    // ID number
-    final idNumber = _firstMatch(rawText, [
-      r'(?:ID|IDENTIFICATION|LIC(?:ENSE)?)[#\s:]*([A-Z0-9]{5,12})',
+    // ── Pakistani CNIC "Identity Number" (format: 12345-1234567-1 or 13 digits) ──
+    final cnicNumber = _firstMatch(rawText, [
+      // Standard CNIC format with optional spaces around dashes
+      r'(\d{5}\s*-\s*\d{7}\s*-\s*\d)',
+      // 13 digits (Pakistani CNIC length)
+      r'\b(\d{13})\b',
+      // Labelled fallback
+      r'Identity\s+Number[\s\n]*[:\-]*\s*([A-Z0-9\-]{9,17})',
     ]);
-    if (idNumber != null) fields['idNumber'] = idNumber;
+    if (cnicNumber != null) {
+      fields['idNumber'] = cnicNumber.replaceAll(RegExp(r'\s+'), '');
+    }
 
-    // Expiry date
+    // ── Name (line after "Name") ──
+    final nameMatch = RegExp(
+      r'Name\s*\n\s*([^\r\n]+)',
+      caseSensitive: false,
+    ).firstMatch(rawText);
+    if (nameMatch != null) {
+      fields['firstName'] = nameMatch.group(1)?.trim() ?? '';
+    }
+
+    // ── Date of Expiry ──
     final expiry = _firstMatch(rawText, [
-      r'(?:EXP(?:IRES?)?|EXPIRATION)[:\s]*(\d{2}[/\-]\d{2}[/\-]\d{2,4})',
-      r'(\d{2}[/\-]\d{2}[/\-]\d{4})',
+      r'Date\s+of\s+Expiry[:\s]*(\d{2}[.\-/]\d{2}[.\-/]\d{4})',
+      r'(?:Expiry|EXP(?:IRES?)?|EXPIRATION)[:\s]*(\d{2}[.\-/]\d{2}[.\-/]\d{4})',
     ]);
     if (expiry != null) fields['expiryDate'] = expiry;
-
-    // Date of birth
-    final dob = _firstMatch(rawText, [
-      r'(?:DOB|DATE OF BIRTH|BIRTH(?:DATE)?)[:\s]*(\d{2}[/\-]\d{2}[/\-]\d{2,4})',
-    ]);
-    if (dob != null) fields['dateOfBirth'] = dob;
-
-    // State
-    final state = _firstMatch(rawText, [
-      r'(?:STATE|ST)[:\s]*([A-Z]{2})\b',
-    ]);
-    if (state != null) fields['state'] = state;
-
-    // Name
-    final nameMatch = RegExp(r'([A-Z]+),\s*([A-Z]+)').firstMatch(rawText);
-    if (nameMatch != null) {
-      fields['lastName'] = nameMatch.group(1) ?? '';
-      fields['firstName'] = nameMatch.group(2) ?? '';
-    }
 
     return ParsedDocument(type: 'government_id', fields: fields, rawText: rawText);
   }

@@ -90,7 +90,7 @@ class AuthService {
     String companyName = '',
   }) async {
     try {
-      await _api.post('/auth/register', body: {
+      await _api.post('/auth/signup', body: {
         'email': email,
         'password': password,
         'role': role,
@@ -145,6 +145,54 @@ class AuthService {
       rethrow;
     } catch (e) {
       debugPrint('Login error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> verifyEmail({
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      final data = await _api.post('/auth/verify-email', body: {
+        'email': email,
+        'otp': otp,
+      }, auth: false);
+      return data != null; // True if no exception was thrown and data returned
+    } catch (e) {
+      debugPrint('Verify Email error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> requestPasswordReset({
+    required String email,
+  }) async {
+    try {
+      await _api.post('/auth/request-password-reset', body: {
+        'email': email,
+      }, auth: false);
+      return true;
+    } catch (e) {
+      debugPrint('Request password reset error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    try {
+      await _api.post('/auth/reset-password', body: {
+        'email': email,
+        'otp': otp,
+        'newPassword': newPassword,
+      }, auth: false);
+      return true;
+    } catch (e) {
+      debugPrint('Reset password error: $e');
       return false;
     }
   }

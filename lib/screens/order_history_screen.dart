@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/shipment.dart';
 import '../services/shipment_service.dart';
-import '../widgets/custom_bottom_nav.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -222,15 +221,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       ),
                       child: Row(
                         children: [
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamedAndRemoveUntil(
-                                  context, '/home', (route) => false);
-                            },
-                            child: const Icon(Icons.arrow_back,
-                                color: Colors.white, size: 20),
-                          ),
-                          const SizedBox(width: 15),
                           Expanded(
                             child: Row(
                               children: [
@@ -328,20 +318,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
               ),
             ),
           ],
-        ),
-        extendBody: true,
-        bottomNavigationBar: CustomBottomNav(
-          currentIndex: 1,
-          onTap: (index) {
-            if (index == 0) {
-              Navigator.pushNamedAndRemoveUntil(
-                  context, '/home', (route) => false);
-            } else if (index == 2) {
-              Navigator.pushReplacementNamed(context, '/load_board');
-            } else if (index == 3) {
-              Navigator.pushReplacementNamed(context, '/stats');
-            }
-          },
         ),
       ),
     );
