@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _locationTimer;
   bool _idUploaded = false;
   bool _cdlUploaded = false;
+  bool _cdlOptional = false;
 
   @override
   void initState() {
@@ -64,9 +65,17 @@ class _HomeScreenState extends State<HomeScreen> {
         user == null ? null : _auth.getVehicleProfile(user.id);
 
     final prefs = await SharedPreferences.getInstance();
-    final emailKey = user?.email ?? '';
-    final idUploaded = prefs.getBool('${emailKey}_id_uploaded') ?? false;
-    final cdlUploaded = prefs.getBool('${emailKey}_cdl_uploaded') ?? false;
+    final emailKey = (user?.email ?? '').toLowerCase();
+    final rawEmail = user?.email ?? '';
+    final idUploaded = prefs.getBool('${emailKey}_id_uploaded') ??
+        prefs.getBool('${rawEmail}_id_uploaded') ??
+        false;
+    final cdlUploaded = prefs.getBool('${emailKey}_cdl_uploaded') ??
+        prefs.getBool('${rawEmail}_cdl_uploaded') ??
+        false;
+    final cdlOptional = prefs.getBool('${emailKey}_cdl_optional') ??
+        prefs.getBool('${rawEmail}_cdl_optional') ??
+        false;
 
     if (!mounted) return;
     setState(() {
@@ -74,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _vehicleProfile = vehicleProfile;
       _idUploaded = idUploaded;
       _cdlUploaded = cdlUploaded;
+      _cdlOptional = cdlOptional;
       _loading = false;
     });
   }
@@ -877,12 +887,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 12),
                     if (!_loading &&
                         (!_idUploaded ||
-                            !_cdlUploaded ||
+                            (!_cdlUploaded && !_cdlOptional) ||
                             _vehicleProfile == null))
                       _buildProfileProgressCard(),
                     if (!_loading &&
                         _idUploaded &&
-                        _cdlUploaded &&
+                        (_cdlUploaded || _cdlOptional) &&
                         _vehicleProfile != null)
                       _buildVehicleInfoCard(),
                     const SizedBox(height: 100),
@@ -971,10 +981,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!_idUploaded) {
       await Navigator.pushNamed(context, '/id_upload', arguments: email);
       await _loadHomeData();
-    } else if (!_cdlUploaded) {
+    } else if (!_cdlUploaded && !_cdlOptional) {
       await Navigator.pushNamed(context, '/cdl_upload', arguments: email);
       await _loadHomeData();
-    } else {
+    } else if (_vehicleProfile == null) {
       _navigateToVehicleRegistration();
     }
   }
@@ -986,12 +996,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (!_idUploaded) {
       descriptionText = 'Upload your government ID to verify identity.';
-      progressPercent = 0.15;
-      progressLabel = '15%';
-    } else if (!_cdlUploaded) {
+      if (_vehicleProfile != null) {
+        progressPercent = _cdlOptional ? 0.65 : 0.49;
+        progressLabel = _cdlOptional ? '65%' : '49%';
+      } else {
+        progressPercent = _cdlOptional ? 0.35 : 0.15;
+        progressLabel = _cdlOptional ? '35%' : '15%';
+      }
+    } else if (!_cdlUploaded && !_cdlOptional) {
       descriptionText = 'Upload your Commercial Driver\'s License.';
       progressPercent = 0.40;
       progressLabel = '40%';
+    } else if (_vehicleProfile == null) {
+      descriptionText = 'Register your vehicle to start booking loads.';
+      progressPercent = _cdlOptional ? 0.35 : 0.66;
+      progressLabel = _cdlOptional ? '35%' : '66%';
     }
 
     return GestureDetector(
@@ -1084,7 +1103,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildProgressStep('ID Upload', _idUploaded),
                 const SizedBox(width: 8),
-                _buildProgressStep('CDL Upload', _cdlUploaded),
+                _buildProgressStep('CDL Upload', _cdlUploaded || _cdlOptional),
                 const SizedBox(width: 8),
                 _buildProgressStep('Vehicle Reg.', _vehicleProfile != null),
               ],

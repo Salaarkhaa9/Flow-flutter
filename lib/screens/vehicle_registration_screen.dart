@@ -802,18 +802,35 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                       ),
                       const SizedBox(height: 12),
                     ],
-                    Center(
-                      child: Text(
-                        widget.isEditing
-                            ? 'Vehicle Management'
-                            : 'Vehicle Registration',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                            ),
+                          ),
                         ),
-                      ),
+                        Text(
+                          widget.isEditing
+                              ? 'Vehicle Management'
+                              : 'Vehicle Registration',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     if (!widget.isEditing) ...[

@@ -63,17 +63,25 @@ class _FuelLogScreenState extends State<FuelLogScreen> {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final emailKey = user.email;
-    final hasId = prefs.getBool('${emailKey}_id_uploaded') ?? false;
-    final hasCdl = prefs.getBool('${emailKey}_cdl_uploaded') ?? false;
+    final emailKey = user.email.toLowerCase();
+    final rawEmail = user.email;
+    final hasId = prefs.getBool('${emailKey}_id_uploaded') ??
+        prefs.getBool('${rawEmail}_id_uploaded') ??
+        false;
+    final hasCdl = prefs.getBool('${emailKey}_cdl_uploaded') ??
+        prefs.getBool('${rawEmail}_cdl_uploaded') ??
+        false;
+    final cdlOptional = prefs.getBool('${emailKey}_cdl_optional') ??
+        prefs.getBool('${rawEmail}_cdl_optional') ??
+        false;
     final vehicle = auth.getVehicleProfile(user.id);
     final hasVehicle = vehicle != null;
 
     if (mounted) {
       setState(() {
         _hasId = hasId;
-        _hasCdl = hasCdl;
-        _profileComplete = hasId && hasCdl && hasVehicle;
+        _hasCdl = hasCdl || cdlOptional;
+        _profileComplete = hasId && (hasCdl || cdlOptional) && hasVehicle;
         _checkingProfile = false;
       });
     }

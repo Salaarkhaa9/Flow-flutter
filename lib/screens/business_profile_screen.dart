@@ -37,12 +37,21 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
     final user = _auth.currentUser;
     if (user != null) {
       final prefs = await SharedPreferences.getInstance();
-      _idUploaded = prefs.getBool('${user.email}_id_uploaded') ?? false;
-      _idFrontPath = prefs.getString('${user.email}_id_front_path');
-      _idBackPath = prefs.getString('${user.email}_id_back_path');
+      final emailKey = user.email.toLowerCase();
+      final rawEmail = user.email;
+      _idUploaded = prefs.getBool('${emailKey}_id_uploaded') ??
+          prefs.getBool('${rawEmail}_id_uploaded') ??
+          false;
+      _idFrontPath = prefs.getString('${emailKey}_id_front_path') ??
+          prefs.getString('${rawEmail}_id_front_path');
+      _idBackPath = prefs.getString('${emailKey}_id_back_path') ??
+          prefs.getString('${rawEmail}_id_back_path');
 
-      _cdlUploaded = prefs.getBool('${user.email}_cdl_uploaded') ?? false;
-      _cdlFrontPath = prefs.getString('${user.email}_cdl_front_path');
+      _cdlUploaded = prefs.getBool('${emailKey}_cdl_uploaded') ??
+          prefs.getBool('${rawEmail}_cdl_uploaded') ??
+          false;
+      _cdlFrontPath = prefs.getString('${emailKey}_cdl_front_path') ??
+          prefs.getString('${rawEmail}_cdl_front_path');
 
       _vehicleProfile = _auth.getVehicleProfile(user.id);
     }

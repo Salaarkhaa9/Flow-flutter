@@ -143,10 +143,10 @@ class _IdUploadScreenState extends State<IdUploadScreen>
 
       // Save status locally
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('${widget.userEmail}_id_uploaded', true);
-      await prefs.setString('${widget.userEmail}_id_front_path', urlFront);
+      await prefs.setBool('${widget.userEmail.toLowerCase()}_id_uploaded', true);
+      await prefs.setString('${widget.userEmail.toLowerCase()}_id_front_path', urlFront);
       if (urlBack != null) {
-        await prefs.setString('${widget.userEmail}_id_back_path', urlBack);
+        await prefs.setString('${widget.userEmail.toLowerCase()}_id_back_path', urlBack);
       }
 
       setState(() {

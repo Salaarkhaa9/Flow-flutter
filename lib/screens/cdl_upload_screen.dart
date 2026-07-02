@@ -138,8 +138,8 @@ class _CdlUploadScreenState extends State<CdlUploadScreen>
 
       // Save status locally
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('${widget.userEmail}_cdl_uploaded', true);
-      await prefs.setString('${widget.userEmail}_cdl_front_path', urlCdl);
+      await prefs.setBool('${widget.userEmail.toLowerCase()}_cdl_uploaded', true);
+      await prefs.setString('${widget.userEmail.toLowerCase()}_cdl_front_path', urlCdl);
 
       setState(() {
         _isUploading = false;
@@ -266,8 +266,11 @@ class _CdlUploadScreenState extends State<CdlUploadScreen>
     );
   }
 
-  void _skipForNow() {
-    Navigator.pushNamed(
+  void _skipForNow() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('${widget.userEmail.toLowerCase()}_cdl_optional', true);
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(
       context,
       '/vehicle_registration',
     );
@@ -399,14 +402,37 @@ class _CdlUploadScreenState extends State<CdlUploadScreen>
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'Upload Your CDL',
-                      style: GoogleFonts.outfit(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: GestureDetector(
+                            onTap: () => Navigator.pushReplacementNamed(
+                              context, 
+                              '/id_upload',
+                              arguments: widget.userEmail,
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          'Upload Your CDL',
+                          style: GoogleFonts.outfit(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -498,7 +524,7 @@ class _CdlUploadScreenState extends State<CdlUploadScreen>
                             onPressed:
                                 (_isUploading || _uploadSuccess) ? null : _skipForNow,
                             child: Text(
-                              'Skip for now',
+                              'Mark as optional',
                               style: GoogleFonts.poppins(
                                 color: const Color(0xFF71717A),
                                 fontSize: 12,

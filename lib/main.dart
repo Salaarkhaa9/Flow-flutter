@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/splash_screen.dart';
 import 'screens/intro_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
@@ -18,27 +19,19 @@ import 'screens/search_screen.dart';
 import 'screens/notification_screen.dart';
 import 'screens/tasks_screen.dart';
 import 'screens/business_profile_screen.dart';
-import 'services/notification_service.dart';
 import 'models/load.dart';
 import 'models/shipment.dart';
 import 'theme/app_theme.dart';
-import 'services/auth_service.dart';
-import 'services/token_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Load persisted tokens first so the API client can attach them.
-  await TokenService().load();
-  // Restore persisted session (if any) before the widget tree is built.
-  final bool loggedIn = await AuthService.tryAutoLogin();
-  // Load persisted notifications.
-  await NotificationService().load();
-  runApp(FlowApp(startLoggedIn: loggedIn));
+  // Run app immediately — SplashScreen handles all async init
+  // so the user sees UI right away instead of a blank screen.
+  runApp(const FlowApp());
 }
 
 class FlowApp extends StatelessWidget {
-  final bool startLoggedIn;
-  const FlowApp({super.key, required this.startLoggedIn});
+  const FlowApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -46,9 +39,10 @@ class FlowApp extends StatelessWidget {
       title: 'FLOW',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      // Skip the intro/login flow if the driver is already authenticated.
-      initialRoute: startLoggedIn ? '/home' : '/',
+      // Always start at splash; it decides the destination after async init.
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => const SplashScreen(),
         '/': (context) => const IntroScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),

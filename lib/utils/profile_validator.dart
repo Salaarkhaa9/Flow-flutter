@@ -17,14 +17,22 @@ Future<void> checkProfileAndNavigate(
   if (!context.mounted) {
     return;
   }
-  final emailKey = user.email;
-  final hasId = prefs.getBool('${emailKey}_id_uploaded') ?? false;
-  final hasCdl = prefs.getBool('${emailKey}_cdl_uploaded') ?? false;
+  final emailKey = user.email.toLowerCase();
+  final rawEmail = user.email;
+  final hasId = prefs.getBool('${emailKey}_id_uploaded') ??
+      prefs.getBool('${rawEmail}_id_uploaded') ??
+      false;
+  final hasCdl = prefs.getBool('${emailKey}_cdl_uploaded') ??
+      prefs.getBool('${rawEmail}_cdl_uploaded') ??
+      false;
+  final cdlOptional = prefs.getBool('${emailKey}_cdl_optional') ??
+      prefs.getBool('${rawEmail}_cdl_optional') ??
+      false;
 
   final vehicle = auth.getVehicleProfile(user.id);
   final hasVehicle = vehicle != null;
 
-  if (hasId && hasCdl && hasVehicle) {
+  if (hasId && (hasCdl || cdlOptional) && hasVehicle) {
     onComplete();
   } else {
     showDialog(
