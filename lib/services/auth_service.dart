@@ -81,7 +81,7 @@ class AuthService {
     required String lastName,
     required String email,
     required String password,
-    String role = 'independent_driver',
+    String role = 'DRIVER',
     // Legacy params – kept for backward compat, ignored by backend
     String username = '',
     String mcNumber = '',

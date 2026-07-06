@@ -18,9 +18,9 @@ class ApiClient {
   // Change this to your EC2 public IP for production.
   // Android emulator uses 10.0.2.2 to reach host localhost.
   static String get baseUrl {
-    if (kIsWeb) return 'http://35.87.35.50:3000/api';
-    if (Platform.isAndroid) return 'http://35.87.35.50:3000/api';
-    return 'http://35.87.35.50:3000/api'; // iOS simulator / desktop
+    if (kIsWeb) return 'http://35.87.35.50/api';
+    if (Platform.isAndroid) return 'http://35.87.35.50/api';
+    return 'http://35.87.35.50/api'; // iOS simulator / desktop
   }
 
   final TokenService _tokens = TokenService();

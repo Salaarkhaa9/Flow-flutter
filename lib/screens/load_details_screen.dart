@@ -8,7 +8,6 @@ import '../services/auth_service.dart';
 import '../services/load_service.dart';
 import '../services/shipment_service.dart';
 import '../services/notification_service.dart';
-import '../widgets/custom_bottom_nav.dart';
 import '../theme/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -66,11 +65,20 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
     final originStr = '${_load.origin}, ${_load.originState}';
     final destStr = '${_load.destination}, ${_load.destinationState}';
     LatLng? o = await _geocode(originStr);
+    await Future.delayed(const Duration(milliseconds: 600));
     LatLng? d = await _geocode(destStr);
-    o ??= await _geocode(_load.origin);
-    d ??= await _geocode(_load.destination);
+    
+    if (o == null) {
+      await Future.delayed(const Duration(milliseconds: 600));
+      o = await _geocode(_load.origin);
+    }
+    if (d == null) {
+      await Future.delayed(const Duration(milliseconds: 600));
+      d = await _geocode(_load.destination);
+    }
+    
     if (o == null || d == null) {
-      setState(() => _mapLoading = false);
+      if (mounted) setState(() => _mapLoading = false);
       return;
     }
     _originLatLng = o;
@@ -84,15 +92,7 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
       _routePoints =
           coords.map((c) => LatLng(c[1].toDouble(), c[0].toDouble())).toList();
     }
-    setState(() => _mapLoading = false);
-    if (_routePoints.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final bounds = LatLngBounds.fromPoints(_routePoints);
-        _mapController.fitCamera(
-          CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(24)),
-        );
-      });
-    }
+    if (mounted) setState(() => _mapLoading = false);
   }
 
   Future<void> _bookLoad() async {
@@ -168,296 +168,312 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      extendBody: true,
-      body: Stack(
-        children: [
-          // Background Gradient
-          Container(
-            height: 350,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFE6ECEF),
-                  Colors.white,
-                ],
-              ),
-            ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 120), // For bottom nav
+      backgroundColor: AppTheme.surfaceLight,
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top Header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.slateDeep,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: const Icon(Icons.arrow_back,
-                                color: Colors.white, size: 20),
-                          ),
-                          const SizedBox(width: 15),
-                          Expanded(
-                            child: Text(
-                              'Load details',
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Live OSM Map
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: SizedBox(
-                        height: 200,
-                        child: _mapLoading
-                            ? Container(
-                                color: Colors.grey.shade100,
-                                child: const Center(
-                                  child: CircularProgressIndicator(
-                                      color: AppTheme.slateDeep),
-                                ),
-                              )
-                            : FlutterMap(
-                                mapController: _mapController,
-                                options: MapOptions(
-                                  initialCenter: _originLatLng ??
-                                      const LatLng(33.0, -89.0),
-                                  initialZoom: 6,
-                                  interactionOptions: const InteractionOptions(
-                                    flags: InteractiveFlag
-                                        .none, // disable scroll to keep UX clean
-                                  ),
-                                ),
-                                children: [
-                                  TileLayer(
-                                    urlTemplate:
-                                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                    userAgentPackageName:
-                                        'com.example.flow_app',
-                                  ),
-                                  if (_routePoints.isNotEmpty)
-                                    PolylineLayer(
-                                      polylines: [
-                                        Polyline(
-                                          points: _routePoints,
-                                          strokeWidth: 3.5,
-                                          color: AppTheme.slateDeep,
-                                        ),
-                                      ],
-                                    ),
-                                  if (_originLatLng != null &&
-                                      _destinationLatLng != null)
-                                    MarkerLayer(
-                                      markers: [
-                                        Marker(
-                                          point: _originLatLng!,
-                                          width: 30,
-                                          height: 30,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.green,
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                  color: Colors.white,
-                                                  width: 2),
-                                            ),
-                                            child: const Icon(Icons.circle,
-                                                color: Colors.white, size: 12),
-                                          ),
-                                        ),
-                                        Marker(
-                                          point: _destinationLatLng!,
-                                          width: 30,
-                                          height: 30,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.red,
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                  color: Colors.white,
-                                                  width: 2),
-                                            ),
-                                            child: const Icon(
-                                                Icons.location_pin,
-                                                color: Colors.white,
-                                                size: 16),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                ],
-                              ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-
-                  // Timeline
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        _buildTimelineStep(
-                          isFirst: true,
-                          pillText: 'Pick up',
-                          pillColor: AppTheme.slateDeep,
-                          companyName: 'Fresh Food Inc.',
-                          rating: '3.5',
-                          address: '${_load.origin}, ${_load.originState}',
-                          date: '${_load.originDate} • ${_load.originTime}',
-                        ),
-                        _buildTimelineStep(
-                          isFirst: false,
-                          pillText: 'Delivery',
-                          pillColor: const Color(0xFFd6ff00),
-                          companyName: 'Smart Food Inc.',
-                          rating: '4.5',
-                          address:
-                              '${_load.destination}, ${_load.destinationState}',
-                          date:
-                              '${_load.destinationDate} • ${_load.destinationTime}',
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Details Section
+                  _buildTimelineCard(),
+                  const SizedBox(height: 24),
                   _buildSectionTitle('Details'),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                            child: _buildInfoItem(
-                                Icons.qr_code_scanner, 'ID', _load.loadNumber)),
-                        Expanded(
-                            child: _buildInfoItem(Icons.inventory_2_outlined,
-                                'Commodity', _load.commodity)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                            child: _buildInfoItem(Icons.view_in_ar_outlined,
-                                'Load', '4 Pallets')),
-                        Expanded(
-                            child: _buildInfoItem(Icons.local_shipping_outlined,
-                                'Weight', _load.weight)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Additional Info Section
-                  _buildSectionTitle('Additional info'),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                            child: _buildInfoItem(Icons.route_outlined,
-                                'Distance', _load.distance)),
-                        Expanded(
-                            child: _buildInfoItem(
-                                Icons.timer_outlined, 'Time', '25 mins')),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                            child: _buildInfoItem(
-                                Icons.monetization_on_outlined,
-                                'Rate per mile',
-                                _load.rateUnit)),
-                        Expanded(
-                            child: _buildInfoItem(Icons.payments_outlined,
-                                'Estimated earns', _load.rate)),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 12),
+                  _buildDetailsGrid(),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle('Additional Info'),
+                  const SizedBox(height: 12),
+                  _buildAdditionalInfoGrid(),
                   const SizedBox(height: 40),
-
-                  // Book Load Button
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _bookLoad,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.slateDeep,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const CircularProgressIndicator(
-                                color: Colors.white)
-                            : Text(
-                                'Book Load',
-                                style: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: 2,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushNamedAndRemoveUntil(
-                context, '/home', (route) => false);
-          } else if (index == 1) {
-            Navigator.pushReplacementNamed(context, '/order_history');
-          } else if (index == 2) {
-            Navigator.pop(context);
-          } else if (index == 3) {
-            Navigator.pushReplacementNamed(context, '/stats');
-          }
-        },
+      bottomNavigationBar: _buildBottomBar(),
+    );
+  }
+
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 280.0,
+      pinned: true,
+      backgroundColor: AppTheme.slateDeep,
+      iconTheme: const IconThemeData(color: Colors.white),
+      title: Text(
+        'Load Details',
+        style: GoogleFonts.outfit(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+        ),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            _mapLoading
+                ? Container(
+                    color: AppTheme.slateLight,
+                    child: const Center(
+                      child: CircularProgressIndicator(color: AppTheme.limeVoltage),
+                    ),
+                  )
+                : FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCameraFit: _routePoints.isNotEmpty
+                          ? CameraFit.bounds(
+                              bounds: LatLngBounds.fromPoints(_routePoints),
+                              padding: const EdgeInsets.all(40),
+                            )
+                          : null,
+                      initialCenter: _originLatLng ?? const LatLng(33.0, -89.0),
+                      initialZoom: 6,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.all,
+                      ),
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.example.flow_app',
+                      ),
+                      if (_routePoints.isNotEmpty)
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: _routePoints,
+                              strokeWidth: 4.0,
+                              color: AppTheme.slateDeep,
+                            ),
+                          ],
+                        ),
+                      if (_originLatLng != null && _destinationLatLng != null)
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: _originLatLng!,
+                              width: 32,
+                              height: 32,
+                              child: _buildMapMarker(Colors.green, Icons.circle, 14),
+                            ),
+                            Marker(
+                              point: _destinationLatLng!,
+                              width: 32,
+                              height: 32,
+                              child: _buildMapMarker(Colors.red, Icons.location_on, 18),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 100,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.6),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMapMarker(Color color, IconData icon, double size) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Icon(icon, color: Colors.white, size: size),
+      ),
+    );
+  }
+
+  Widget _buildBottomBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: ElevatedButton(
+            onPressed: _isLoading ? null : _bookLoad,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.slateDeep,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: AppTheme.limeVoltage,
+                      strokeWidth: 3,
+                    ),
+                  )
+                : Text(
+                    'Book Load • ${_load.rate}',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimelineCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildTimelineStep(
+            isFirst: true,
+            pillText: 'PICK UP',
+            pillColor: AppTheme.slateLight,
+            pillTextColor: Colors.white,
+            companyName: 'Fresh Food Inc.',
+            address: '${_load.origin}, ${_load.originState}',
+            date: '${_load.originDate} • ${_load.originTime}',
+          ),
+          _buildTimelineStep(
+            isFirst: false,
+            pillText: 'DELIVERY',
+            pillColor: AppTheme.limeVoltage,
+            pillTextColor: AppTheme.slateDeep,
+            companyName: 'Smart Food Inc.',
+            address: '${_load.destination}, ${_load.destinationState}',
+            date: '${_load.destinationDate} • ${_load.destinationTime}',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailsGrid() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _buildInfoItem(Icons.tag, 'Load ID', _load.loadNumber)),
+              Expanded(child: _buildInfoItem(Icons.inventory_2_outlined, 'Commodity', _load.commodity)),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Divider(color: AppTheme.borderColor, height: 1),
+          ),
+          Row(
+            children: [
+              Expanded(child: _buildInfoItem(Icons.view_in_ar_outlined, 'Equipment', '4 Pallets')),
+              Expanded(child: _buildInfoItem(Icons.scale_outlined, 'Weight', _load.weight)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdditionalInfoGrid() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _buildInfoItem(Icons.route_outlined, 'Distance', _load.distance)),
+              Expanded(child: _buildInfoItem(Icons.timer_outlined, 'Est. Time', '25 mins')),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Divider(color: AppTheme.borderColor, height: 1),
+          ),
+          Row(
+            children: [
+              Expanded(child: _buildInfoItem(Icons.monetization_on_outlined, 'Rate per mile', _load.rateUnit)),
+              Expanded(child: _buildInfoItem(Icons.payments_outlined, 'Total Rate', _load.rate, valueColor: AppTheme.slateDeep)),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -466,8 +482,8 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
     required bool isFirst,
     required String pillText,
     required Color pillColor,
+    required Color pillTextColor,
     required String companyName,
-    required String rating,
     required String address,
     required String date,
   }) {
@@ -477,114 +493,115 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
         Column(
           children: [
             Container(
-              width: 24,
-              height: 24,
+              width: 16,
+              height: 16,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.slateDeep, width: 4),
+                color: pillColor,
+                border: Border.all(color: AppTheme.slateDeep, width: 3),
               ),
             ),
             if (isFirst)
               Container(
                 width: 2,
-                height: 70,
+                height: 80,
                 color: AppTheme.borderColor,
+                margin: const EdgeInsets.symmetric(vertical: 4),
               ),
           ],
         ),
-        const SizedBox(width: 15),
+        const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: pillColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  pillText,
-                  style: GoogleFonts.inter(
-                    color: pillColor.computeLuminance() > 0.5
-                        ? Colors.black
-                        : Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: pillColor,
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Text(
-                    companyName,
-                    style: GoogleFonts.outfit(
-                      color: AppTheme.slateDeep,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.star, color: Colors.amber, size: 14),
-                  Text(
-                    rating,
+                  child: Text(
+                    pillText,
                     style: GoogleFonts.inter(
-                      color: AppTheme.textPrimary,
-                      fontSize: 12,
+                      color: pillTextColor,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                address,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppTheme.textSecondary,
                 ),
-              ),
-              Text(
-                date,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 8),
+                Text(
+                  companyName,
+                  style: GoogleFonts.outfit(
+                    color: AppTheme.slateDeep,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
                 ),
-              ),
-              if (isFirst) const SizedBox(height: 20),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textSecondary),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        address,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today_outlined, size: 14, color: AppTheme.textSecondary),
+                    const SizedBox(width: 4),
+                    Text(
+                      date,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: AppTheme.slateDeep,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                if (isFirst) const SizedBox(height: 16),
             ],
           ),
         ),
-        const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
       ],
     );
   }
 
   Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          title,
-          style: GoogleFonts.outfit(
-            color: AppTheme.slateDeep,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
+    return Text(
+      title,
+      style: GoogleFonts.outfit(
+        color: AppTheme.slateDeep,
+        fontWeight: FontWeight.w700,
+        fontSize: 18,
       ),
     );
   }
 
-  Widget _buildInfoItem(IconData icon, String label, String value) {
+  Widget _buildInfoItem(IconData icon, String label, String value, {Color? valueColor}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: AppTheme.textSecondary, size: 24),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceMid,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: AppTheme.slateDeep, size: 20),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -595,16 +612,16 @@ class _LoadDetailsScreenState extends State<LoadDetailsScreen> {
                 style: GoogleFonts.inter(
                   color: AppTheme.textSecondary,
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 value,
                 style: GoogleFonts.outfit(
-                  color: AppTheme.slateDeep,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  color: valueColor ?? AppTheme.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
                 ),
               ),
             ],
